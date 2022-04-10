@@ -16,10 +16,8 @@ import astropy.units as u
 from astropy.io import ascii
 import pandas as pd
 from astropy.time import Time
-
-sys.path.append('~/winter_web/app')
-from .utils import get_alt_az, get_field_ids, get_start_stop_times, get_program_details, validate_program_dates, \
-    get_tonight, up_tonight
+from wintertoo.utils import get_alt_az, get_field_ids, get_start_stop_times, \
+    get_program_details, validate_program_dates, get_tonight, up_tonight
 import re
 
 
