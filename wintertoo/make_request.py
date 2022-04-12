@@ -14,8 +14,9 @@ import astropy.units as u
 import pandas as pd
 from astropy.time import Time
 from wintertoo.utils import get_alt_az, get_field_ids, get_start_stop_times, \
-    get_program_details, validate_program_dates, get_tonight, up_tonight
+    get_program_details, get_tonight, up_tonight
 import re
+from wintertoo.validate import validate_program_dates
 
 
 def save_df_to_sqlitedb(df, save_path):
@@ -69,11 +70,6 @@ def make_too_request_from_file(too_file_path, save_path, config_path):
 
     save_df_to_sqlitedb(too_df, save_path)
     return status
-
-
-# def validate_program_pi(
-#         program_name: str
-# ):
 
 
 def make_too_dataframe(data, config_path, base_index=0):

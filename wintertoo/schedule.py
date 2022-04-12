@@ -6,6 +6,7 @@ import logging
 from nuwinter.paths import winter_schedule_dir
 from wintertoo.data import summer_filters, too_schedule_config
 from wintertoo.make_request import make_too_request_from_file
+from wintertoo.fields import get_best_summer_field
 
 
 logger = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ def build_schedule(
         maximum_seeing: float = 3.0,
         nights: list = None,
         t_0: Time = None,
-        save: bool = True
+        save: bool = True,
 ):
 
     if nights is None:
@@ -87,8 +88,8 @@ def make_schedule(
         schedule_name,
         ra_degs: list,
         dec_degs: list,
-        prog_id: str = base_prog_id,
-        pi: str = "Somebody",
+        prog_id: str,
+        pi: str,
         filters: list = None,
         texp: float = 300,
         nexp: int = 1,
@@ -129,6 +130,7 @@ def make_schedule(
 
     return schedule
 
+
 def schedule_ra_dec(
         schedule_name: str,
         ra_deg: float,
@@ -146,8 +148,15 @@ def schedule_ra_dec(
         use_field: bool = True,
         submit: bool = False
 ):
+    if summer:
+        get_best_field = get_best_summer_field
+    else:
+        raise NotImplementedError
+
+    # Take RA/Dec and select nearest-centered field
+
     if use_field:
-        best_field = get_best_field(res["candidate"]["ra"], res["candidate"]["dec"])
+        best_field = get_best_field(ra_deg, dec_deg)
         ra_deg = best_field["RA"]
         dec_deg = best_field["Dec"]
 
@@ -166,4 +175,6 @@ def schedule_ra_dec(
         prog_id=prog_id,
         submit=submit
     )
+
+    return schedule
 
