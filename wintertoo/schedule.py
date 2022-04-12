@@ -4,7 +4,7 @@ from astropy.time import Time
 from astropy import units as u
 import logging
 from nuwinter.paths import winter_schedule_dir
-from nuwinter.data import base_prog_id, summer_filters, too_schedule_config
+from wintertoo.data import summer_filters, too_schedule_config
 from wintertoo.make_request import make_too_request_from_file
 
 
