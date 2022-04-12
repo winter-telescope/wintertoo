@@ -8,12 +8,9 @@ Created on Tue Jan 25 11:15:41 2022
 
 import json
 import numpy as np
-import pandas as pd
 from sqlalchemy import create_engine
 from datetime import datetime
-import sys
 import astropy.units as u
-from astropy.io import ascii
 import pandas as pd
 from astropy.time import Time
 from wintertoo.utils import get_alt_az, get_field_ids, get_start_stop_times, \
@@ -21,7 +18,7 @@ from wintertoo.utils import get_alt_az, get_field_ids, get_start_stop_times, \
 import re
 
 
-def save_df_to_sqlitedb(df,save_path):
+def save_df_to_sqlitedb(df, save_path):
     date = datetime.now().strftime('%m_%d_%Y_%H_%s')
     engine = create_engine(save_path + 'timed_requests_' + date + '_' + '.db?check_same_thread=False',
                            echo=True)
@@ -63,15 +60,20 @@ def make_too_request_from_file(too_file_path, save_path, config_path):
     for index, data in too_table.iterrows():
         # ret = make_too_request(data, save_path, config_path,index=index)
         ret, new_df = make_too_dataframe(data, config_path, base_index=base_index)
-        too_df = pd.concat([too_df,new_df])
+        too_df = pd.concat([too_df, new_df])
         status.append(ret)
         base_index = len(too_df)
 
     status = np.array(status)
     print(status)
 
-    save_df_to_sqlitedb(too_df,save_path)
+    save_df_to_sqlitedb(too_df, save_path)
     return status
+
+
+# def validate_program_pi(
+#         program_name: str
+# ):
 
 
 def make_too_dataframe(data, config_path, base_index=0):
@@ -154,6 +156,7 @@ def make_too_dataframe(data, config_path, base_index=0):
 
     return 0, save_df
 
+
 def make_too_request(data, save_path, config_path, index=0):
 
     # get header keys
@@ -173,7 +176,6 @@ def make_too_request(data, save_path, config_path, index=0):
     keys = config_data['Summary'].keys()
     key_array = []
 
-    tonight = get_tonight(data)
     tonight = get_tonight(data)
     is_up, str_up = up_tonight(tonight, ra * u.deg, dec * u.deg)
     if not is_up:

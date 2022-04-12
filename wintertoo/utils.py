@@ -5,9 +5,8 @@ Created on Tue Jan 25 13:51:59 2022
 
 @author: frostig
 """
-import astropy.units as u
-from astropy.time import Time, TimeDelta
-from astropy.coordinates import SkyCoord, EarthLocation, AltAz
+from astropy.time import Time
+from astropy.coordinates import SkyCoord, AltAz
 import astropy.coordinates as coords
 import astroplan
 import numpy as np
@@ -175,7 +174,7 @@ def get_field_ids(ras, decs, units="degrees"):
     return field_list
 
 
-def get_program_details(program_name,user=None, password=None, secret_file='/home/viraj/db_secrets.csv'):
+def get_program_details(program_name,user=None, password=None, secret_file='~/Code/db_secrets.csv'):
     if user is None:
         secrets = ascii.read(secret_file)
         user = secrets['user'][0]
@@ -190,11 +189,11 @@ def get_program_details(program_name,user=None, password=None, secret_file='/hom
     return data
 
 
-def validate_program_dates(start_time, stop_time,program_details):
+def validate_program_dates(start_time, stop_time, program_details):
     program_start_date = program_details[3]
     program_end_date = program_details[4]
     valid = 0
-    if np.logical_or((start_time <program_start_date),(stop_time>program_end_date)):
+    if np.logical_or((start_time < program_start_date), (stop_time > program_end_date)):
         valid = -99
 
     return valid
