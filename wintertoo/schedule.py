@@ -3,11 +3,9 @@ import os
 from astropy.time import Time
 from astropy import units as u
 import logging
-from nuwinter.paths import winter_schedule_dir
 from wintertoo.data import summer_filters, too_schedule_config
 from wintertoo.make_request import make_too_request_from_file
 from wintertoo.fields import get_best_summer_field
-
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +31,7 @@ def build_schedule(
         maximum_seeing: float = 3.0,
         nights: list = None,
         t_0: Time = None,
-        save: bool = True,
+        save_csv: bool = True,
 ):
 
     if nights is None:
@@ -73,12 +71,8 @@ def build_schedule(
 
     schedule = schedule.astype({"Nexp": int})
 
-    out_path = os.path.join(
-        winter_schedule_dir,
-        f"{schedule_name}.csv"
-    )
-
-    if save:
+    if save_csv:
+        out_path = f"{schedule_name}.csv"
         logger.info(f"Saving schedule to {out_path}")
         schedule.to_csv(out_path, index=False)
     return schedule
@@ -99,7 +93,7 @@ def make_schedule(
         maximum_seeing: float = 3.0,
         nights: list = None,
         t_0: Time = None,
-        save: bool = True,
+        save_csv: bool = True,
         submit: bool = False
 ):
     schedule = build_schedule(
@@ -117,7 +111,7 @@ def make_schedule(
         maximum_airmass=maximum_airmass,
         nights=nights,
         t_0=t_0,
-        save=save
+        save_csv=save_csv
     )
 
     if submit:
@@ -138,15 +132,17 @@ def schedule_ra_dec(
         pi: str,
         prog_id: str,
         filters: list = summer_filters,
-        texp: float = 300.,
-        nexp: int = 1,
+        t_exp: float = 300.,
+        n_exp: int = 1,
         dither_bool: bool = True,
         dither_distance="",
         nights=[1],
         t_0=None,
+        maximum_airmass=2.0,
         summer: bool = True,
         use_field: bool = True,
-        submit: bool = False
+        submit: bool = False,
+        save_csv: bool = False
 ):
     if summer:
         get_best_field = get_best_summer_field
@@ -165,15 +161,16 @@ def schedule_ra_dec(
         ra_degs=[ra_deg],
         dec_degs=[dec_deg],
         filters=filters,
-        texp=texp,
-        nexp=nexp,
+        texp=t_exp,
+        nexp=n_exp,
         dither_bool=dither_bool,
         dither_distance=dither_distance,
         nights=nights,
         t_0=t_0,
         pi=pi,
         prog_id=prog_id,
-        submit=submit
+        submit=submit,
+        save_csv=save_csv
     )
 
     return schedule
