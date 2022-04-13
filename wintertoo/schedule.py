@@ -4,7 +4,7 @@ from astropy.time import Time
 from astropy import units as u
 import logging
 from wintertoo.data import summer_filters, too_schedule_config
-from wintertoo.make_request import make_too_request_from_file
+from wintertoo.make_request import make_too_request_from_df
 from wintertoo.fields import get_best_summer_field
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,6 @@ def to_date_string(
 
 
 def build_schedule(
-        schedule_name,
         ra_degs: list,
         dec_degs: list,
         prog_id: str,
@@ -31,7 +30,7 @@ def build_schedule(
         maximum_seeing: float = 3.0,
         nights: list = None,
         t_0: Time = None,
-        save_csv: bool = True,
+        csv_save_file: str = None,
 ):
 
     if nights is None:
@@ -71,10 +70,9 @@ def build_schedule(
 
     schedule = schedule.astype({"Nexp": int})
 
-    if save_csv:
-        out_path = f"{schedule_name}.csv"
-        logger.info(f"Saving schedule to {out_path}")
-        schedule.to_csv(out_path, index=False)
+    if csv_save_file is not None:
+        logger.info(f"Saving schedule to {csv_save_file}")
+        schedule.to_csv(csv_save_file, index=False)
     return schedule
 
 
@@ -93,11 +91,10 @@ def make_schedule(
         maximum_seeing: float = 3.0,
         nights: list = None,
         t_0: Time = None,
-        save_csv: bool = True,
+        csv_save_file: str = None,
         submit: bool = False
 ):
     schedule = build_schedule(
-        schedule_name=schedule_name,
         ra_degs=ra_degs,
         dec_degs=dec_degs,
         prog_id=prog_id,
@@ -111,16 +108,21 @@ def make_schedule(
         maximum_airmass=maximum_airmass,
         nights=nights,
         t_0=t_0,
-        save_csv=save_csv
+        csv_save_file=csv_save_file
     )
 
     if submit:
 
-        make_too_request_from_file(
-            too_file_path=csv_path,
-            save_path=csv_path.replace(".csv", ".db"),
-            config_path=too_schedule_config
+        make_too_request_from_df(
+            schedule,
+            save_path=f"{schedule_name}.df"
         )
+
+        # make_too_request_from_file(
+        #     too_file_path=csv_path,
+        #     save_path=csv_path.replace(".csv", ".db"),
+        #     config_path=too_schedule_config
+        # )
 
     return schedule
 
@@ -142,7 +144,7 @@ def schedule_ra_dec(
         summer: bool = True,
         use_field: bool = True,
         submit: bool = False,
-        save_csv: bool = False
+        csv_save_file: str = None,
 ):
     if summer:
         get_best_field = get_best_summer_field
@@ -170,7 +172,7 @@ def schedule_ra_dec(
         pi=pi,
         prog_id=prog_id,
         submit=submit,
-        save_csv=save_csv
+        csv_save_file=csv_save_file
     )
 
     return schedule

@@ -16,10 +16,17 @@ from astropy.time import Time
 from wintertoo.utils import get_alt_az, get_field_ids, get_start_stop_times, \
     get_program_details, get_tonight, up_tonight
 import re
-from wintertoo.validate import validate_program_dates
+from wintertoo.validate import validate_program_dates, validate_schedule_df, validate_pi
+from wintertoo.data import too_schedule_config
 
 
-def save_df_to_sqlitedb(df, save_path):
+def export_schedule_to_sqlitedb(
+        schedule: pd.DataFrame,
+        save_path: str
+):
+    # Validate format of schedule using json schema
+    validate_schedule_df(schedule)
+
     date = datetime.now().strftime('%m_%d_%Y_%H_%s')
     engine = create_engine(save_path + 'timed_requests_' + date + '_' + '.db?check_same_thread=False',
                            echo=True)
@@ -27,12 +34,12 @@ def save_df_to_sqlitedb(df, save_path):
     sqlite_table = "Summary"
 
     # save
-    df.to_sql(sqlite_table, sqlite_connection, if_exists='replace', index=False)
+    schedule.to_sql(sqlite_table, sqlite_connection, if_exists='replace', index=False)
     sqlite_connection.close()
     return 0
 
 
-def make_too_request_from_file(too_file_path, save_path, config_path):
+def make_too_request_from_file(too_file_path, save_path):
     try:
         too_table = pd.read_csv(too_file_path, comment='#')
     except ValueError:
@@ -40,42 +47,44 @@ def make_too_request_from_file(too_file_path, save_path, config_path):
 
     print(too_table)
 
-    too_table['ra'] = too_table['RA_deg']
-    too_table['dec'] = too_table['Dec_deg']
-    too_table['filt'] = too_table['Filter']
-    too_table['n_exps'] = too_table['Nexp']
-    too_table['dither'] = too_table['Dither?']
-    too_table['start_time'] = Time(
-        np.array(too_table['Earliest UT Date'] + ' ' + too_table['UT Start Time'], dtype=str), format='iso').mjd
-    too_table['stop_time'] = Time(np.array(too_table['Latest UT Date'] + ' ' + too_table['UT Finish Time'], dtype=str),
-                                  format='iso').mjd
-    too_table['program_name'] = too_table['propID']
-    too_table['exptime'] = too_table['Texp']
-    too_table['time_units'] = 'mjd'
-    too_table['target_priority'] = 0
+    make_too_request_from_df(too_table, save_path)
+
+
+def make_too_request_from_df(df, save_path):
+
+    df['ra'] = df['RA_deg']
+    df['dec'] = df['Dec_deg']
+    df['filt'] = df['Filter']
+    df['n_exps'] = df['Nexp']
+    df['dither'] = df['Dither?']
+    df['start_time'] = Time(
+        np.array(df['Earliest UT Date'] + ' ' + df['UT Start Time'], dtype=str), format='iso').mjd
+    df['stop_time'] = Time(np.array(df['Latest UT Date'] + ' ' + df['UT Finish Time'], dtype=str),
+                           format='iso').mjd
+    df['program_name'] = df['propID']
+    df['exptime'] = df['Texp']
+    df['time_units'] = 'mjd'
+    df['target_priority'] = 0
 
     status = []
 
-    too_df = pd.DataFrame()
+    schedule = pd.DataFrame()
     base_index = 0
-    for index, data in too_table.iterrows():
+    for index, data in df.iterrows():
         # ret = make_too_request(data, save_path, config_path,index=index)
-        ret, new_df = make_too_dataframe(data, config_path, base_index=base_index)
-        too_df = pd.concat([too_df, new_df])
+        ret, new_df = make_too_dataframe(data, base_index=base_index)
+        schedule = pd.concat([schedule, new_df])
         status.append(ret)
-        base_index = len(too_df)
+        base_index = len(schedule)
 
     status = np.array(status)
     print(status)
 
-    save_df_to_sqlitedb(too_df, save_path)
+    export_schedule_to_sqlitedb(schedule, save_path)
     return status
 
 
-def make_too_dataframe(data, config_path, base_index=0):
-    # get header keys
-    with open(config_path, "r") as jsonfile:
-        config_data = json.load(jsonfile)
+def make_too_dataframe(data, base_index=0):
 
     start_time, stop_time = get_start_stop_times(data)
     n_exp = data['n_exps']
@@ -87,7 +96,7 @@ def make_too_dataframe(data, config_path, base_index=0):
     program_name = data['program_name']
     target_priority = data['target_priority']
     exposures_array = np.linspace(start_time.mjd, stop_time.mjd, n_exp)
-    keys = config_data['Summary'].keys()
+    keys = too_schedule_config['properties'].keys()
     key_array = []
 
     tonight = get_tonight(data)
@@ -96,6 +105,9 @@ def make_too_dataframe(data, config_path, base_index=0):
         return -99, pd.DataFrame()
 
     programs_query_results = get_program_details(program_name)
+
+    validate_pi(program_name, pi_name, program_details)
+
     if len(programs_query_results) == 0:
         return -10, pd.DataFrame()
 
@@ -122,127 +134,34 @@ def make_too_dataframe(data, config_path, base_index=0):
     ind = range(n_lines)
     df_data = np.zeros((n_lines, len(key_array)))
     df_data[:] = np.NaN
-    save_df = pd.DataFrame(data=df_data, index=ind,
-                           columns=key_array)
+    schedule = pd.DataFrame(data=df_data, index=ind, columns=key_array)
 
     # add values
-    save_df["obsHistID"] = ind
-    save_df["obsHistID"] = save_df["obsHistID"] + base_index
-    save_df["requestID"] = ind
-    save_df["requestID"] = save_df["requestID"] + base_index
-    save_df["propID"] = program_db_id
-    save_df["fieldRA"] = ra_rad
-    save_df["fieldDec"] = dec_rad
-    save_df["visitTime"] = exptime
-    save_df["visitExpTime"] = exptime
-    save_df["expDate"] = np.floor(start_time.mjd)
-    save_df["validStart"] = start_time.mjd
-    save_df["validStop"] = stop_time.mjd
-    save_df["expMJD"] = exposures_array
-    save_df["visitTime"] = exptime
-    save_df["visitExpTime"] = exptime
-    save_df["filter"] = filt
-    save_df["dither"] = dither
-    save_df["azimuth"] = az
-    save_df["altitude"] = alt
-    save_df["Priority"] = target_final_priority
-    save_df["fieldID"] = 999999999  # protected id for guest obs
-    save_df["metricValue"] = target_final_priority
-    save_df["observed"] = 0
+    schedule["obsHistID"] = ind
+    schedule["obsHistID"] = schedule["obsHistID"] + base_index
+    schedule["requestID"] = ind
+    schedule["requestID"] = schedule["requestID"] + base_index
+    schedule["propID"] = program_db_id
+    schedule["fieldRA"] = ra_rad
+    schedule["fieldDec"] = dec_rad
+    schedule["visitTime"] = exptime
+    schedule["visitExpTime"] = exptime
+    schedule["expDate"] = np.floor(start_time.mjd)
+    schedule["validStart"] = start_time.mjd
+    schedule["validStop"] = stop_time.mjd
+    schedule["expMJD"] = exposures_array
+    schedule["visitTime"] = exptime
+    schedule["visitExpTime"] = exptime
+    schedule["filter"] = filt
+    schedule["dither"] = dither
+    schedule["azimuth"] = az
+    schedule["altitude"] = alt
+    schedule["Priority"] = target_final_priority
+    schedule["fieldID"] = 999999999  # protected id for guest obs
+    schedule["metricValue"] = target_final_priority
+    schedule["observed"] = 0
 
-    return 0, save_df
-
-
-def make_too_request(data, save_path, config_path, index=0):
-
-    # get header keys
-    with open(config_path, "r") as jsonfile:
-        config_data = json.load(jsonfile)
-
-    start_time, stop_time = get_start_stop_times(data)
-    n_exp = data['n_exps']
-    ra, dec = data['ra'], data['dec']
-    ra_rad, dec_rad = data['ra'] * u.deg.to(u.rad), data['dec'] * u.deg.to(u.rad)
-    exptime = data['exptime']
-    filt = data['filt']
-    dither = data['dither']
-    program_name = data['program_name']
-    target_priority = data['target_priority']
-    exposures_array = np.linspace(start_time.mjd, stop_time.mjd, n_exp)
-    keys = config_data['Summary'].keys()
-    key_array = []
-
-    tonight = get_tonight(data)
-    is_up, str_up = up_tonight(tonight, ra * u.deg, dec * u.deg)
-    if not is_up:
-        return -99
-
-    programs_query_results = get_program_details(program_name)
-    if len(programs_query_results) == 0:
-        return -10
-
-    program_details = programs_query_results[0]
-    dates_valid = validate_program_dates(start_time.mjd, stop_time.mjd, program_details)
-
-    if dates_valid < 0:
-        return -20
-
-    program_db_id = programs_query_results[0][0]
-    program_pi_name = programs_query_results[0][2]
-    program_base_priority = programs_query_results[0][6]
-
-    target_final_priority = program_base_priority + target_priority
-
-    for key in keys:
-        key_array.append(key)
-        # get alt and az from coordinates and time
-
-    alt, az = get_alt_az(exposures_array, ra * u.deg, dec * u.deg)
-
-    # make dataframe structure
-    n_lines = n_exp
-    ind = range(n_lines)
-    df_data = np.zeros((n_lines, len(key_array)))
-    df_data[:] = np.NaN
-    save_df = pd.DataFrame(data=df_data, index=ind,
-                           columns=key_array)
-
-    # add values
-    save_df["obsHistID"] = ind
-    save_df["requestID"] = ind
-    save_df["propID"] = program_db_id
-    save_df["fieldRA"] = ra_rad
-    save_df["fieldDec"] = dec_rad
-    save_df["visitTime"] = exptime
-    save_df["visitExpTime"] = exptime
-    save_df["expDate"] = np.floor(start_time.mjd)
-    save_df["validStart"] = start_time.mjd
-    save_df["validStop"] = stop_time.mjd
-    save_df["expMJD"] = exposures_array
-    save_df["visitTime"] = exptime
-    save_df["visitExpTime"] = exptime
-    save_df["filter"] = filt
-    save_df["dither"] = dither
-    save_df["azimuth"] = az
-    save_df["altitude"] = alt
-    save_df["Priority"] = target_final_priority
-    save_df["fieldID"] = 999999999  # protected id for guest obs
-    save_df["metricValue"] = target_final_priority
-
-    # save_df.reset_index(drop=True, inplace=True)
-
-
-    # make sqlite database
-    date = datetime.now().strftime('%m_%d_%Y_%H_%s')
-    engine = create_engine(save_path + 'timed_requests_' + date + '_' + str(index) + '.db?check_same_thread=False',
-                           echo=True)
-    sqlite_connection = engine.connect()
-    sqlite_table = "Summary"
-
-    # save
-    save_df.to_sql(sqlite_table, sqlite_connection, if_exists='replace', index=False)
-    sqlite_connection.close()
-    return 0
+    return 0, schedule
 
 
 def make_timed_request(save_path, config_path, ra, dec, exptime, n_exp, start, stop, exp_arr, filt, dither):
@@ -269,35 +188,34 @@ def make_timed_request(save_path, config_path, ra, dec, exptime, n_exp, start, s
     ind = range(n_lines)
     df_data = np.zeros((n_lines, len(key_array)))
     df_data[:] = np.NaN
-    save_df = pd.DataFrame(data=df_data, index=ind,
-                           columns=key_array)
+    schedule = pd.DataFrame(data=df_data, index=ind, columns=key_array)
 
     # add values
-    save_df["obsHistID"] = ind
-    save_df["requestID"] = ind
-    save_df["propID"] = 4
-    save_df["fieldRA"] = ra
-    save_df["fieldDec"] = dec
-    save_df["visitTime"] = exptime
-    save_df["visitExpTime"] = exptime
-    save_df["expDate"] = np.floor(start)
-    save_df["validStart"] = start
-    save_df["validStop"] = stop
-    save_df["expMJD"] = exp_arr
-    save_df["visitTime"] = exptime
-    save_df["visitExpTime"] = exptime
-    save_df["filter"] = filt
-    save_df["dither"] = dither
-    save_df["azimuth"] = az
-    save_df["altitude"] = alt
-    save_df["fieldID"] = 999999999  # protected id for guest obs
+    schedule["obsHistID"] = ind
+    schedule["requestID"] = ind
+    schedule["propID"] = 4
+    schedule["fieldRA"] = ra
+    schedule["fieldDec"] = dec
+    schedule["visitTime"] = exptime
+    schedule["visitExpTime"] = exptime
+    schedule["expDate"] = np.floor(start)
+    schedule["validStart"] = start
+    schedule["validStop"] = stop
+    schedule["expMJD"] = exp_arr
+    schedule["visitTime"] = exptime
+    schedule["visitExpTime"] = exptime
+    schedule["filter"] = filt
+    schedule["dither"] = dither
+    schedule["azimuth"] = az
+    schedule["altitude"] = alt
+    schedule["fieldID"] = 999999999  # protected id for guest obs
 
-    # save_df.reset_index(drop=True, inplace=True)
+    # schedule.reset_index(drop=True, inplace=True)
 
     # save
     sqlite_table = "Summary"
 
-    save_df.to_sql(sqlite_table, sqlite_connection, if_exists='replace', index=False)
+    schedule.to_sql(sqlite_table, sqlite_connection, if_exists='replace', index=False)
     sqlite_connection.close()
     return 0
 

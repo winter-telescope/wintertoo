@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+import pandas as pd
 from jsonschema import validate, ValidationError
 from wintertoo.data import too_schedule_config
 
@@ -17,11 +18,18 @@ def validate_schedule_json(
         raise
 
 
+def validate_schedule_df(
+    df: pd.DataFrame
+):
+    validate_schedule_json(df.to_dict())
+
+
 def validate_pi(
+        programs_query_results,
         program_name: str,
         pi: str
 ):
-    return True
+    assert pi == programs_query_results[0][2]
 
 
 def validate_program_dates(start_time, stop_time, program_details):

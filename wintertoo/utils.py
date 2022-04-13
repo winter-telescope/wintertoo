@@ -119,16 +119,16 @@ def get_start_stop_times(data):
         stop_time = Time(float(data['stop_time']), format='mjd')
 
     else:
-        Pacific = pytz.timezone("PST8PDT")
+        pacific = pytz.timezone("PST8PDT")
         # convert iso string to datetime object to astropy time object
         dt = datetime.datetime.fromisoformat(str(data['start_time']))
-        dt2 = Pacific.localize(
+        dt2 = pacific.localize(
             datetime.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond))
         dt3 = dt2.astimezone(pytz.utc)
         start_time = Time(dt3, scale='utc')
 
         dt = datetime.datetime.fromisoformat(str(data['stop_time']))
-        dt2 = Pacific.localize(
+        dt2 = pacific.localize(
             datetime.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond))
         dt3 = dt2.astimezone(pytz.utc)
         stop_time = Time(dt3, scale='utc')
@@ -158,15 +158,15 @@ def get_field_ids(ras, decs, units="degrees"):
         elif units == "degrees":
             ra_degs = ra
             dec_degs = dec
+        else:
+            raise ValueError(f"Units '{units}' not recognised")
 
         print(ra, dec)
         # sort dec
         dec_sort = summer_fields.iloc[((summer_fields['dec'] - dec_degs).abs() <= camera_field_size).values]
-        # print('dec', dec_sort)
 
         # sort ra
         ra_sort = dec_sort.iloc[((dec_sort['ra'] - ra_degs).abs() <= camera_field_size).values]
-        # print('ra', ra_sort)
 
         field_num = ra_sort.index[0]
         field_list.append(int(field_num))
@@ -174,11 +174,13 @@ def get_field_ids(ras, decs, units="degrees"):
     return field_list
 
 
-def get_program_details(program_name,user=None, password=None, secret_file='~/Code/db_secrets.csv'):
+def get_program_details(program_name, user=None, password=None, secret_file='/Users/robertstein/Code/db_secrets.csv'):
+
     if user is None:
         secrets = ascii.read(secret_file)
         user = secrets['user'][0]
         password = secrets['pwd'][0]
+
     conn = psycopg2.connect(database='commissioning', user=user, password=password, host='jagati.caltech.edu')
     cursor = conn.cursor()
 
