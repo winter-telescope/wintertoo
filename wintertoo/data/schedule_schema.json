@@ -40,7 +40,6 @@
   },
   "required": [
     "obsHistID",
-    "obsHistID",
     "fieldID",
     "fieldRA",
     "fieldDec",
