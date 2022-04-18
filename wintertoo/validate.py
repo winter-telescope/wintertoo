@@ -29,7 +29,10 @@ def validate_pi(
         program_name: str,
         pi: str
 ):
-    assert pi == programs_query_results[0][2]
+    valid = 0
+    if pi != programs_query_results[0][2]:
+        valid = -99
+    return valid
 
 
 def validate_program_dates(start_time, stop_time, program_details):

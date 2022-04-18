@@ -174,7 +174,7 @@ def get_field_ids(ras, decs, units="degrees"):
     return field_list
 
 
-def get_program_details(program_name, user=None, password=None, secret_file='/Users/robertstein/Code/db_secrets.csv'):
+def get_program_details(program_name, user=None, password=None, secret_file='data/db_secrets.csv'):
 
     if user is None:
         secrets = ascii.read(secret_file)
