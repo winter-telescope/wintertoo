@@ -94,6 +94,7 @@ def make_too_dataframe(data, base_index=0):
     filt = data['filt']
     dither = data['dither']
     program_name = data['program_name']
+    pi_name = data['pi_name']
     target_priority = data['target_priority']
     exposures_array = np.linspace(start_time.mjd, stop_time.mjd, n_exp)
     keys = too_schedule_config['properties'].keys()
@@ -106,7 +107,7 @@ def make_too_dataframe(data, base_index=0):
 
     programs_query_results = get_program_details(program_name)
 
-    validate_pi(program_name, pi_name, program_details)
+    validate_pi(programs_query_results, pi_name)
 
     if len(programs_query_results) == 0:
         return -10, pd.DataFrame()
