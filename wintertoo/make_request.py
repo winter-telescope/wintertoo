@@ -107,10 +107,12 @@ def make_too_dataframe(data, base_index=0):
 
     programs_query_results = get_program_details(program_name)
 
-    validate_pi(programs_query_results, pi_name)
-
     if len(programs_query_results) == 0:
         return -10, pd.DataFrame()
+
+    pi_valid = validate_pi(programs_query_results, pi_name)
+    if pi_valid < 0:
+        return -15, pd.DataFrame()
 
     program_details = programs_query_results[0]
     dates_valid = validate_program_dates(start_time.mjd, stop_time.mjd, program_details)
