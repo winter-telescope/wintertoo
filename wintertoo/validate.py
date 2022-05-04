@@ -1,8 +1,11 @@
 import logging
+
+import astropy.time
 import numpy as np
 import pandas as pd
 import json
 from astropy import units as u
+from astropy.time import Time
 from jsonschema import validate, ValidationError
 from wintertoo.data import too_db_schedule_config, summer_filters, max_target_priority
 from wintertoo.utils import get_program_details, get_tonight, up_tonight
@@ -25,24 +28,6 @@ def validate_schedule_json(
         logger.error(e)
         raise RequestValidationError(e)
 
-def validate_schedule_request(
-        schedule_request: pd.DataFrame,
-        program_name: str,
-        program_pi: str,
-):
-    validate_schedule_df(schedule_request)
-    validate_target_visility(schedule_request)
-
-    # Check request using program info
-
-    programs_query_results = get_program_details(program_name)
-    program_details = programs_query_results[0]
-    program_base_priority = programs_query_results[0][6]
-
-    validate_pi(program_name, pi_name, program_details)
-    validate_program_dates(start_time.mjd, stop_time.mjd, program_details)
-    validate_target_priority(schedule_request, program_base_priority=program_base_priority)
-
 
 def validate_schedule_df(
     df: pd.DataFrame
@@ -51,16 +36,16 @@ def validate_schedule_df(
         json.loads(row.to_json())
         validate_schedule_json(json.loads(row.to_json()))
 
-def validate_schedule_visility(
+def validate_target_visibility(
         schedule: pd.DataFrame
 ):
     for _, row in schedule.iterrows():
 
-        ra = row["RA"] * u.radians
-        dec = row["Dec"] * u.radians
+        ra = row["fieldRA"] * u.radian
+        dec = row["fieldDec"] * u.radian
 
         for time_mjd in [row["validStart"], row["validStop"]]:
-            t = Time(time_mjd, format=mjd)
+            t = Time(time_mjd, format="mjd")
 
             is_up, _ = up_tonight(time=t, ra=ra, dec=dec)
 
@@ -87,7 +72,7 @@ def validate_target_priority(
     )
 
     for _, row in schedule.iterrows():
-        target_priority = schedule["priority"]
+        target_priority = row["priority"]
 
         if target_priority > max_priority:
             err = f"Target priority ({target_priority} exceeds maximum allowed value of {target_priority}." \
@@ -103,20 +88,75 @@ def validate_filter(
     assert filter_name in summer_filters
 
 
-def validate_pi(
-        programs_details,
-        program_name: str,
-        pi: str
+def validate_target_pi(
+        schedule: pd.DataFrame,
+        prog_pi: str
 ):
-    if pi != programs_details[0][2]:
-        err = f"Pi '{pi}' does not match PI for program {program_name}"
-        logger.error(err)
-        raise RequestValidationError(err)
+    for _, row in schedule.iterrows():
+        pi = row["pi"]
+        if pi != prog_pi:
+            err = f"Pi '{pi}' does not match PI for program {program_name}"
+            logger.error(err)
+            raise RequestValidationError(err)
 
 
-def validate_program_dates(start_time, stop_time, program_details):
-    program_start_date = program_details[3]
-    program_end_date = program_details[4]
-    if np.logical_or((start_time < program_start_date), (stop_time > program_end_date)):
-        raise RequestValidationError
+def validate_target_dates(
+        schedule: pd.DataFrame,
+        program_start_date: astropy.time.Time,
+        program_end_date: astropy.time.Time
+):
+
+    for _, row in schedule.iterrows():
+
+        start_time = row["validStart"]
+        stop_time = row["validStop"]
+
+        err = None
+
+        if start_time > stop_time:
+            err = f"Start time '{start_time}' is after stop time '{stop_time}'."
+
+        elif start_time < program_start_date:
+            err = f"Start time '{start_time}' is before program start date '{stop_time}'"
+
+        elif stop_time > program_end_date:
+            err = f"Stop time '{start_time}' is after program end date '{stop_time}'"
+
+        if err is not None:
+            logger.error(err)
+            RequestValidationError(err)
+
+
+def validate_schedule_request(
+        schedule_request: pd.DataFrame,
+        program_name: str,
+):
+    validate_schedule_df(schedule_request)
+
+    validate_target_visibility(schedule_request)
+
+    # Check request using program info
+
+    programs_query_results = get_program_details(program_name)
+    program_details = programs_query_results[0]
+
+    program_pi = programs_query_results[0][2]
+    program_start_date = programs_query_results[0][3]
+    program_end_date = programs_query_results[0][4]
+    program_base_priority = programs_query_results[0][6]
+
+
+    validate_target_pi(
+        schedule_request,
+        program_pi=program_pi
+    )
+    validate_target_dates(
+        schedule_request,
+        program_start_date=program_start_date,
+        program_end_date=program_end_date
+    )
+    validate_target_priority(
+        schedule_request,
+        program_base_priority=program_base_priority
+    )
 

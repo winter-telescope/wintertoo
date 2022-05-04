@@ -16,7 +16,7 @@ from astropy.time import Time
 from wintertoo.utils import get_alt_az, get_field_ids, get_start_stop_times, \
     get_program_details, get_tonight, up_tonight
 import re
-from wintertoo.validate import validate_program_dates, validate_schedule_df, validate_pi, validate_target_priority
+from wintertoo.validate import validate_target_dates, validate_schedule_df, validate_target_pi, validate_target_priority
 from wintertoo.data import too_db_schedule_config
 
 
@@ -124,17 +124,17 @@ def make_too_dataframe(data, base_index=0):
         return -99, pd.DataFrame()
 
     programs_query_results = get_program_details(program_name)
-    validate_pi(program_name, pi_name, program_details)
+    validate_target_pi(program_name, pi_name, program_details)
 
     if len(programs_query_results) == 0:
         return -10, pd.DataFrame()
 
-    pi_valid = validate_pi(programs_query_results, pi_name)
+    pi_valid = validate_target_pi(programs_query_results, pi_name)
     if pi_valid < 0:
         return -15, pd.DataFrame()
 
     program_details = programs_query_results[0]
-    dates_valid = validate_program_dates(start_time.mjd, stop_time.mjd, program_details)
+    dates_valid = validate_target_dates(start_time.mjd, stop_time.mjd, program_details)
 
     if dates_valid < 0:
         return -20, pd.DataFrame()

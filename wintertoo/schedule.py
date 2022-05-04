@@ -152,7 +152,6 @@ def schedule_ra_dec(
         t_0=None,
         summer: bool = True,
         use_field: bool = True,
-        submit: bool = False,
         csv_save_file: str = None,
 ):
 
@@ -186,7 +185,6 @@ def schedule_ra_dec(
         t_0=t_0,
         pi=pi,
         prog_id=prog_id,
-        submit=submit,
         csv_save_file=csv_save_file
     )
 
