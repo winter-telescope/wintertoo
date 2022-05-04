@@ -8,21 +8,16 @@ Created on Tue Jan 25 13:51:59 2022
 import astropy.time
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, AltAz
-import astropy.coordinates as coords
-import astroplan
 import numpy as np
 import pandas as pd
 import pytz
 from datetime import datetime
 import psycopg2
-from astropy.io import ascii
+import getpass
+import logging
+from wintertoo.data import program_db_host, palomar_loc, palomar_observer, camera_field_size
 
-# define location of Wallace Observatory
-W_loc = coords.EarthLocation(lat=coords.Latitude('33d21m25.5s'),
-                             lon=coords.Longitude('-116d51m58.4s'),
-                             height=1696.)
-
-W_Observer = astroplan.Observer(location=W_loc)
+logger = logging.getLogger(__name__)
 
 
 # get alt and az of observations
@@ -30,7 +25,7 @@ W_Observer = astroplan.Observer(location=W_loc)
 def get_alt_az(times, ra, dec):
     loc = SkyCoord(ra=ra, dec=dec, frame='icrs')
     time = Time(times, format='mjd')
-    altaz = loc.transform_to(AltAz(obstime=time, location=W_loc))
+    altaz = loc.transform_to(AltAz(obstime=time, location=palomar_loc))
     degs = SkyCoord(altaz.az, altaz.alt, frame='icrs')
     # print('altaz'  , altaz)
     alt_array = degs.dec.degree
@@ -50,8 +45,8 @@ def up_tonight(
 ):
     loc = SkyCoord(ra=ra, dec=dec, frame='icrs')
     time = Time(time, format='mjd')
-    sun_rise = W_Observer.sun_rise_time(time, which="previous")
-    sun_set = W_Observer.sun_set_time(time, which="next")
+    sun_rise = palomar_observer.sun_rise_time(time, which="previous")
+    sun_set = palomar_observer.sun_set_time(time, which="next")
     night = (sun_set.jd - sun_rise.jd)
     if night >= 1:
         # if next day, subtract a day
@@ -59,7 +54,7 @@ def up_tonight(
     else:
         dt = np.linspace(sun_set.jd, sun_set.jd + (night), 100)
 
-    altaz = loc.transform_to(AltAz(obstime=Time(dt, format='jd'), location=W_loc))
+    altaz = loc.transform_to(AltAz(obstime=Time(dt, format='jd'), location=palomar_loc))
     d = {'time': dt, 'alt': altaz.alt}
     df = pd.DataFrame(data=d)
     df = df[df['alt'] >= 20]  # can change limiting altitude here
@@ -85,7 +80,7 @@ def rad_to_deg(x):
     return x * 180 / np.pi
 
 
-camera_field_size = 0.26112 / 2
+
 
 git_path = '../daily_summer_scheduler/data/'
 
@@ -99,16 +94,16 @@ def get_tonight(data):
         stop_time = Time(float(data['stop_time']), format='mjd')
 
     else:
-        Pacific = pytz.timezone("PST8PDT")
+        pacific = pytz.timezone("PST8PDT")
         # convert iso string to datetime object to astropy time object
         dt = datetime.datetime.fromisoformat(str(data['start_time']))
-        dt2 = Pacific.localize(
+        dt2 = pacific.localize(
             datetime.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond))
         dt3 = dt2.astimezone(pytz.utc)
         start_time = Time(dt3, scale='utc')
 
         dt = datetime.datetime.fromisoformat(str(data['stop_time']))
-        dt2 = Pacific.localize(
+        dt2 = pacific.localize(
             datetime.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond))
         dt3 = dt2.astimezone(pytz.utc)
         stop_time = Time(dt3, scale='utc')
@@ -179,14 +174,19 @@ def get_field_ids(ras, decs, units="degrees"):
     return field_list
 
 
-def get_program_details(program_name, user=None, password=None, secret_file='../wintertoo/wintertoo/data/db_secrets.csv'):
+def get_program_details(
+        program_name: str,
+        user: str = None,
+        password: str =None
+):
 
     if user is None:
-        secrets = ascii.read(secret_file)
-        user = secrets['user'][0]
-        password = secrets['pwd'][0]
+        user = input("Enter user: ")
 
-    conn = psycopg2.connect(database='commissioning', user=user, password=password, host='jagati.caltech.edu')
+    if password is None:
+        password = getpass.getpass(f"Enter password for user {user}: ")
+
+    conn = psycopg2.connect(database='commissioning', user=user, password=password, host=program_db_host)
     cursor = conn.cursor()
 
     command = f'''SELECT * FROM programs WHERE programs.progname = '{program_name}';'''
