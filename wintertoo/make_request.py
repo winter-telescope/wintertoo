@@ -112,6 +112,7 @@ def make_too_dataframe(data, base_index=0):
     filt = data['filt']
     dither = data['dither']
     program_name = data['program_name']
+    pi_name = data['pi_name']
     target_priority = data['target_priority']
     exposures_array = np.linspace(start_time.mjd, stop_time.mjd, n_exp)
     keys = too_db_schedule_config['properties'].keys()
@@ -127,6 +128,10 @@ def make_too_dataframe(data, base_index=0):
 
     if len(programs_query_results) == 0:
         return -10, pd.DataFrame()
+
+    pi_valid = validate_pi(programs_query_results, pi_name)
+    if pi_valid < 0:
+        return -15, pd.DataFrame()
 
     program_details = programs_query_results[0]
     dates_valid = validate_program_dates(start_time.mjd, stop_time.mjd, program_details)
