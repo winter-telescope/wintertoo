@@ -86,8 +86,6 @@ def build_schedule(
     schedule["obsHistID"] = range(len(schedule))
     schedule["requestID"] = range(len(schedule))
 
-    print(schedule)
-
     validate_schedule_df(schedule)
 
     if csv_save_file is not None:
@@ -114,7 +112,6 @@ def make_schedule(
         nights: list = None,
         t_0: Time = None,
         csv_save_file: str = None,
-        submit: bool = False
 ):
     schedule = build_schedule(
         ra_degs=ra_degs,
@@ -134,19 +131,6 @@ def make_schedule(
         t_0=t_0,
         csv_save_file=csv_save_file,
     )
-
-    if submit:
-
-        make_too_request_from_df(
-            schedule,
-            save_path=f"{schedule_name}.df"
-        )
-
-        # make_too_request_from_file(
-        #     too_file_path=csv_path,
-        #     save_path=csv_path.replace(".csv", ".db"),
-        #     config_path=too_schedule_config
-        # )
 
     return schedule
 
