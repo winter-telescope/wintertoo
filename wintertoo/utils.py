@@ -5,6 +5,7 @@ Created on Tue Jan 25 13:51:59 2022
 
 @author: frostig
 """
+import astropy.time
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, AltAz
 import astropy.coordinates as coords
@@ -42,7 +43,11 @@ def get_alt_az(times, ra, dec):
 # date in MJD (median Julian Date), e.g. 59480 (Sept 23)
 # ra (right ascension) in hours, minutes, seconds, e.g. '+19h50m41s'
 # dec (declination) in hours, minutes, seconds, e.g. '+08d50m58s'
-def up_tonight(time, ra, dec):
+def up_tonight(
+        time: astropy.time.Time,
+        ra,
+        dec
+):
     loc = SkyCoord(ra=ra, dec=dec, frame='icrs')
     time = Time(time, format='mjd')
     sun_rise = W_Observer.sun_rise_time(time, which="previous")

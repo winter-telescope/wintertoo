@@ -1,11 +1,13 @@
 import pandas as pd
 import os
+import numpy as np
 from astropy.time import Time
 from astropy import units as u
 import logging
-from wintertoo.data import summer_filters, too_schedule_config
+from wintertoo.data import summer_filters, too_db_schedule_config, get_default_value
 from wintertoo.make_request import make_too_request_from_df
 from wintertoo.fields import get_best_summer_field
+from wintertoo.validate import validate_schedule_df, validate_target_priority, calculate_overall_priority
 
 logger = logging.getLogger(__name__)
 
@@ -19,16 +21,18 @@ def to_date_string(
 def build_schedule(
         ra_degs: list,
         dec_degs: list,
+        field_ids: list,
         prog_id: str,
         pi: str,
+        program_priority: float = 0.,
         filters: list = None,
-        texp: float = 300,
+        texp: float = get_default_value("visitExpTime"),
         nexp: int = 1,
-        dither_bool: bool = True,
-        dither_distance="",
-        maximum_airmass: float = 1.5,
-        maximum_seeing: float = 3.0,
+        dither_bool: bool = get_default_value("dither"),
+        dither_distance: float = get_default_value("ditherStepSize"),
+        maximum_airmass: float = get_default_value("maxAirmass"),
         nights: list = None,
+        target_priorities: list = None,
         t_0: Time = None,
         csv_save_file: str = None,
 ):
@@ -43,32 +47,48 @@ def build_schedule(
     schedule = pd.DataFrame()
 
     for night in nights:
-        start_date = to_date_string(t_0 + (night-1)*u.day)
-        end_date = to_date_string(t_0 + (night*u.day))
+        start_date = t_0 + (night-1)*u.day
+        end_date = t_0 + (night*u.day)
 
         for i, ra_deg in enumerate(ra_degs):
             dec_deg = dec_degs[i]
+            field_id = field_ids[i]
+
+            priority = calculate_overall_priority(
+                target_priority=target_priorities[i],
+                program_base_priority=program_priority
+            )
 
             for f in filters:
-                schedule = schedule.append({
-                    "RA_deg": ra_deg,
-                    "Dec_deg": dec_deg,
-                    "Filter": f,
-                    "Texp": texp,
-                    "Nexp": nexp,
-                    "Dither?": ["n", "y"][dither_bool],
-                    "Dither distance": dither_distance,
-                    "PI": pi,
-                    "propID": prog_id,
-                    "Earliest UT Date": start_date,
-                    "UT Start Time": "00:00:00.02",
-                    "Latest UT Date": end_date,
-                    "UT Finish Time": "00:00:00.01",
-                    "Maximum Airmass": maximum_airmass,
-                    "Maximum Seeing": maximum_seeing
-                }, ignore_index=True)
+                for _ in range(nexp):
+                    schedule = schedule.append({
+                        "fieldRA": np.radians(ra_deg),
+                        "fieldDec": np.radians(dec_deg),
+                        "azimuth": -100,
+                        "altitude": -100,
+                        "filter": f,
+                        "visitExpTime": texp,
+                        "priority": priority,
+                        "programPI": pi,
+                        "validStart": start_date.mjd,
+                        "validStop": end_date.mjd,
+                        "observed": False,
+                        "maxAirmass": maximum_airmass,
+                        "dither": dither_bool,
+                        "ditherStepSize": dither_distance,
+                    }, ignore_index=True)
 
-    schedule = schedule.astype({"Nexp": int})
+    schedule = schedule.astype({
+        "dither": bool,
+        "observed": bool
+    })
+
+    schedule["obsHistID"] = range(len(schedule))
+    schedule["requestID"] = range(len(schedule))
+
+    print(schedule)
+
+    validate_schedule_df(schedule)
 
     if csv_save_file is not None:
         logger.info(f"Saving schedule to {csv_save_file}")
@@ -80,15 +100,17 @@ def make_schedule(
         schedule_name,
         ra_degs: list,
         dec_degs: list,
+        field_ids: list,
+        target_priorities: list,
         prog_id: str,
         pi: str,
+        program_priority: float = 0.,
         filters: list = None,
-        texp: float = 300,
-        nexp: int = 1,
-        dither_bool: bool = True,
-        dither_distance="",
-        maximum_airmass: float = 1.5,
-        maximum_seeing: float = 3.0,
+        t_exp: float = get_default_value("visitExpTime"),
+        n_exp: int = 1,
+        dither_bool: bool = get_default_value("dither"),
+        dither_distance: float = get_default_value("ditherStepSize"),
+        maximum_airmass: float = get_default_value("maxAirmass"),
         nights: list = None,
         t_0: Time = None,
         csv_save_file: str = None,
@@ -97,18 +119,20 @@ def make_schedule(
     schedule = build_schedule(
         ra_degs=ra_degs,
         dec_degs=dec_degs,
+        field_ids=field_ids,
+        target_priorities=target_priorities,
         prog_id=prog_id,
         pi=pi,
+        program_priority=program_priority,
         filters=filters,
-        texp=texp,
-        nexp=nexp,
+        texp=t_exp,
+        nexp=n_exp,
         dither_bool=dither_bool,
         dither_distance=dither_distance,
-        maximum_seeing=maximum_seeing,
         maximum_airmass=maximum_airmass,
         nights=nights,
         t_0=t_0,
-        csv_save_file=csv_save_file
+        csv_save_file=csv_save_file,
     )
 
     if submit:
@@ -133,19 +157,21 @@ def schedule_ra_dec(
         dec_deg: float,
         pi: str,
         prog_id: str,
-        filters: list = summer_filters,
-        t_exp: float = 300.,
+        target_priority: float = 1.,
+        filters: list = None,
+        t_exp: float = get_default_value("visitExpTime"),
         n_exp: int = 1,
-        dither_bool: bool = True,
-        dither_distance="",
+        dither_bool: bool = get_default_value("dither"),
+        dither_distance: float = get_default_value("ditherStepSize"),
+        maximum_airmass: float = get_default_value("maxAirmass"),
         nights=[1],
         t_0=None,
-        maximum_airmass=2.0,
         summer: bool = True,
         use_field: bool = True,
         submit: bool = False,
         csv_save_file: str = None,
 ):
+
     if summer:
         get_best_field = get_best_summer_field
     else:
@@ -157,14 +183,19 @@ def schedule_ra_dec(
         best_field = get_best_field(ra_deg, dec_deg)
         ra_deg = best_field["RA"]
         dec_deg = best_field["Dec"]
+        field_id = best_field["#ID"]
+    else:
+        field_id = get_default_value("fieldID")
 
     schedule = make_schedule(
         schedule_name=schedule_name,
         ra_degs=[ra_deg],
         dec_degs=[dec_deg],
+        field_ids=[field_id],
+        target_priorities=[target_priority],
         filters=filters,
-        texp=t_exp,
-        nexp=n_exp,
+        t_exp=t_exp,
+        n_exp=n_exp,
         dither_bool=dither_bool,
         dither_distance=dither_distance,
         nights=nights,

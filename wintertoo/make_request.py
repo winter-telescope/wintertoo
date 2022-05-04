@@ -16,11 +16,29 @@ from astropy.time import Time
 from wintertoo.utils import get_alt_az, get_field_ids, get_start_stop_times, \
     get_program_details, get_tonight, up_tonight
 import re
-from wintertoo.validate import validate_program_dates, validate_schedule_df, validate_pi
-from wintertoo.data import too_schedule_config
+from wintertoo.validate import validate_program_dates, validate_schedule_df, validate_pi, validate_target_priority
+from wintertoo.data import too_db_schedule_config
 
 
 def export_schedule_to_sqlitedb(
+        schedule: pd.DataFrame,
+        save_path: str
+):
+    # Validate format of schedule using json schema
+    validate_schedule_df(schedule)
+
+    date = datetime.now().strftime('%m_%d_%Y_%H_%s')
+    engine = create_engine(save_path + 'timed_requests_' + date + '_' + '.db?check_same_thread=False',
+                           echo=True)
+    sqlite_connection = engine.connect()
+    sqlite_table = "Summary"
+
+    # save
+    schedule.to_sql(sqlite_table, sqlite_connection, if_exists='replace', index=False)
+    sqlite_connection.close()
+    return 0
+
+def convert_to_sqlitedb(
         schedule: pd.DataFrame,
         save_path: str
 ):
@@ -96,7 +114,7 @@ def make_too_dataframe(data, base_index=0):
     program_name = data['program_name']
     target_priority = data['target_priority']
     exposures_array = np.linspace(start_time.mjd, stop_time.mjd, n_exp)
-    keys = too_schedule_config['properties'].keys()
+    keys = too_db_schedule_config['properties'].keys()
     key_array = []
 
     tonight = get_tonight(data)
@@ -105,7 +123,6 @@ def make_too_dataframe(data, base_index=0):
         return -99, pd.DataFrame()
 
     programs_query_results = get_program_details(program_name)
-
     validate_pi(program_name, pi_name, program_details)
 
     if len(programs_query_results) == 0:
@@ -120,6 +137,8 @@ def make_too_dataframe(data, base_index=0):
     program_db_id = programs_query_results[0][0]
     program_pi_name = programs_query_results[0][2]
     program_base_priority = programs_query_results[0][6]
+
+    validate_target_priority(target_priority)
 
     target_final_priority = program_base_priority + target_priority
 
@@ -150,8 +169,6 @@ def make_too_dataframe(data, base_index=0):
     schedule["validStart"] = start_time.mjd
     schedule["validStop"] = stop_time.mjd
     schedule["expMJD"] = exposures_array
-    schedule["visitTime"] = exptime
-    schedule["visitExpTime"] = exptime
     schedule["filter"] = filt
     schedule["dither"] = dither
     schedule["azimuth"] = az

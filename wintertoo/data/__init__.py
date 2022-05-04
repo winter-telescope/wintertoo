@@ -10,7 +10,14 @@ summer_fields = pd.read_csv(summer_fields_path, sep='\s+')
 
 summer_filters = ["u", "g", "r", "i"]
 
-too_schedule_config_path = os.path.join(data_dir, "schedule_schema.json")
+max_target_priority = 1.
+
+too_schedule_config_path = os.path.join(data_dir, "observing_request_schema.json")
 
 with open(too_schedule_config_path, "rb") as f:
-    too_schedule_config = json.load(f)
+    too_db_schedule_config = json.load(f)
+
+def get_default_value(
+        key: str
+):
+    return too_db_schedule_config["properties"][key]["default"]
