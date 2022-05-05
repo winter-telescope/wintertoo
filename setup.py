@@ -23,6 +23,7 @@ setuptools.setup(
     install_requires=[
         "astropy",
         "astroquery",
+        "coveralls",
         "docker",
         "pandas",
         "psycopg2-binary",
