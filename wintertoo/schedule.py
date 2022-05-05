@@ -22,7 +22,7 @@ def build_schedule(
         ra_degs: list,
         dec_degs: list,
         field_ids: list,
-        prog_id: str,
+        program_name: str,
         pi: str,
         program_priority: float = 0.,
         filters: list = None,
@@ -64,12 +64,14 @@ def build_schedule(
                     schedule = schedule.append({
                         "fieldRA": np.radians(ra_deg),
                         "fieldDec": np.radians(dec_deg),
+                        "fieldID": field_id,
                         "azimuth": -100,
                         "altitude": -100,
                         "filter": f,
                         "visitExpTime": texp,
                         "priority": priority,
                         "programPI": pi,
+                        "progName": program_name,
                         "validStart": start_date.mjd,
                         "validStop": end_date.mjd,
                         "observed": False,
@@ -95,12 +97,11 @@ def build_schedule(
 
 
 def make_schedule(
-        schedule_name,
         ra_degs: list,
         dec_degs: list,
         field_ids: list,
         target_priorities: list,
-        prog_id: str,
+        program_name: str,
         pi: str,
         program_priority: float = 0.,
         filters: list = None,
@@ -118,7 +119,7 @@ def make_schedule(
         dec_degs=dec_degs,
         field_ids=field_ids,
         target_priorities=target_priorities,
-        prog_id=prog_id,
+        program_name=program_name,
         pi=pi,
         program_priority=program_priority,
         filters=filters,
@@ -136,11 +137,10 @@ def make_schedule(
 
 
 def schedule_ra_dec(
-        schedule_name: str,
         ra_deg: float,
         dec_deg: float,
         pi: str,
-        prog_id: str,
+        program_name: str,
         target_priority: float = 1.,
         filters: list = None,
         t_exp: float = get_default_value("visitExpTime"),
@@ -171,7 +171,6 @@ def schedule_ra_dec(
         field_id = get_default_value("fieldID")
 
     schedule = make_schedule(
-        schedule_name=schedule_name,
         ra_degs=[ra_deg],
         dec_degs=[dec_deg],
         field_ids=[field_id],
@@ -184,7 +183,7 @@ def schedule_ra_dec(
         nights=nights,
         t_0=t_0,
         pi=pi,
-        prog_id=prog_id,
+        program_name=program_name,
         csv_save_file=csv_save_file
     )
 

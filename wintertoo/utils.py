@@ -177,7 +177,7 @@ def get_field_ids(ras, decs, units="degrees"):
 def get_program_details(
         program_name: str,
         user: str = None,
-        password: str =None
+        password: str = None
 ):
 
     if user is None:

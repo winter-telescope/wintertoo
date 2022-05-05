@@ -36,6 +36,7 @@ def validate_schedule_df(
         json.loads(row.to_json())
         validate_schedule_json(json.loads(row.to_json()))
 
+
 def validate_target_visibility(
         schedule: pd.DataFrame
 ):
@@ -61,6 +62,7 @@ def calculate_overall_priority(
         program_base_priority: float
 ):
     return target_priority + program_base_priority
+
 
 def validate_target_priority(
         schedule: pd.DataFrame,
