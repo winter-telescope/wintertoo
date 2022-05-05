@@ -20,6 +20,7 @@ class TestSchedule(unittest.TestCase):
         validate_schedule_df(test_df)
 
     def test_generate_schedule(self):
+        logger.info("Testing schedule generation")
         schedule = schedule_ra_dec(
             ra_deg=173.7056754,
             dec_deg=11.253441,
