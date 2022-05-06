@@ -1,4 +1,5 @@
 # wintertoo
+[![PyPI version](https://badge.fury.io/py/wintertoo.svg)](https://badge.fury.io/py/wintertoo)
 [![CI](https://github.com/winter-telescope/wintertoo/actions/workflows/continuous_integration.yml/badge.svg)](https://github.com/winter-telescope/wintertoo/actions/workflows/continuous_integration.yml) 
 [![Coverage Status](https://coveralls.io/repos/github/winter-telescope/wintertoo/badge.svg?branch=main)](https://coveralls.io/github/winter-telescope/wintertoo?branch=main) 
 
