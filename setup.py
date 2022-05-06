@@ -19,7 +19,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.10",
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     install_requires=[
         "astropy",
         "astroquery",
@@ -37,5 +37,5 @@ setuptools.setup(
         "email_validator",
         "pytz"
     ],
-    # package_data={'app': ['static/config/*.json']}
+    package_data={'wintertoo': ['data/*.json']}
 )
