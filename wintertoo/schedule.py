@@ -4,10 +4,9 @@ import numpy as np
 from astropy.time import Time
 from astropy import units as u
 import logging
-from wintertoo.data import summer_filters, too_db_schedule_config, get_default_value
-from wintertoo.make_request import make_too_request_from_df
+from wintertoo.data import summer_filters, get_default_value
 from wintertoo.fields import get_best_summer_field
-from wintertoo.validate import validate_schedule_df, validate_target_priority, calculate_overall_priority
+from wintertoo.validate import validate_schedule_df, calculate_overall_priority
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +136,6 @@ def make_schedule(
         t_0=t_0,
         csv_save_file=csv_save_file,
     )
-
     return schedule
 
 

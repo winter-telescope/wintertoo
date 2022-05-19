@@ -7,8 +7,8 @@ import json
 from astropy import units as u
 from astropy.time import Time
 from jsonschema import validate, ValidationError
-from wintertoo.data import too_db_schedule_config, summer_filters, max_target_priority
-from wintertoo.utils import get_program_details, get_tonight, up_tonight
+from wintertoo.data import too_db_schedule_config, summer_filters, max_target_priority, program_db_host
+from wintertoo.utils import get_program_details, up_tonight
 
 logger = logging.getLogger(__name__)
 
@@ -131,33 +131,45 @@ def validate_target_dates(
 
 def validate_schedule_request(
         schedule_request: pd.DataFrame,
-        program_name: str,
+        program_db_user: str = None,
+        program_db_password: str = None,
+        program_db_host_name: str = program_db_host
 ):
     validate_schedule_df(schedule_request)
-
     validate_target_visibility(schedule_request)
 
-    # Check request using program info
+    prog_names = list(set(schedule_request["progName"]))
 
-    programs_query_results = get_program_details(program_name)
-    program_details = programs_query_results[0]
+    for program_name in prog_names:
 
-    program_pi = programs_query_results[0][2]
-    program_start_date = programs_query_results[0][3]
-    program_end_date = programs_query_results[0][4]
-    program_base_priority = programs_query_results[0][6]
+        res = schedule_request[schedule_request["progName"] == program_name]
 
-    validate_target_pi(
-        schedule_request,
-        program_pi=program_pi
-    )
-    validate_target_dates(
-        schedule_request,
-        program_start_date=program_start_date,
-        program_end_date=program_end_date
-    )
-    validate_target_priority(
-        schedule_request,
-        program_base_priority=program_base_priority
-    )
+        # Check request using program info
+
+        programs_query_results = get_program_details(
+            program_name,
+            user=program_db_user,
+            password=program_db_password,
+            host=program_db_host_name
+        )
+        program_details = programs_query_results[0]
+
+        program_pi = programs_query_results[0][2]
+        program_start_date = programs_query_results[0][3]
+        program_end_date = programs_query_results[0][4]
+        program_base_priority = programs_query_results[0][6]
+
+        validate_target_pi(
+            res,
+            prog_pi=program_pi
+        )
+        validate_target_dates(
+            res,
+            program_start_date=program_start_date,
+            program_end_date=program_end_date
+        )
+        validate_target_priority(
+            res,
+            program_base_priority=program_base_priority
+        )
 
