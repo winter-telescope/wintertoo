@@ -26,6 +26,7 @@ class TestSchedule(unittest.TestCase):
             dec_deg=11.253441,
             pi="Stein",
             program_name="2021A000",
+            program_id=1,
             t_0=Time("59704", format="mjd")
         )
         comp = pd.read_json(schedule.to_json())

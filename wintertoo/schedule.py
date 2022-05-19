@@ -23,6 +23,7 @@ def build_schedule(
         dec_degs: list,
         field_ids: list,
         program_name: str,
+        program_id: int,
         pi: str,
         program_priority: float = 0.,
         filters: list = None,
@@ -72,6 +73,7 @@ def build_schedule(
                         "priority": priority,
                         "programPI": pi,
                         "progName": program_name,
+                        "progID": program_id,
                         "validStart": start_date.mjd,
                         "validStop": end_date.mjd,
                         "observed": False,
@@ -102,6 +104,7 @@ def make_schedule(
         field_ids: list,
         target_priorities: list,
         program_name: str,
+        program_id: int,
         pi: str,
         program_priority: float = 0.,
         filters: list = None,
@@ -120,6 +123,7 @@ def make_schedule(
         field_ids=field_ids,
         target_priorities=target_priorities,
         program_name=program_name,
+        program_id=program_id,
         pi=pi,
         program_priority=program_priority,
         filters=filters,
@@ -141,6 +145,7 @@ def schedule_ra_dec(
         dec_deg: float,
         pi: str,
         program_name: str,
+        program_id: int,
         target_priority: float = 1.,
         filters: list = None,
         t_exp: float = get_default_value("visitExpTime"),
@@ -184,6 +189,7 @@ def schedule_ra_dec(
         t_0=t_0,
         pi=pi,
         program_name=program_name,
+        program_id=program_id,
         csv_save_file=csv_save_file
     )
 
