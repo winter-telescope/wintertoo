@@ -62,7 +62,7 @@ def build_schedule(
 
             for f in filters:
                 for _ in range(nexp):
-                    schedule = schedule.append({
+                    new = pd.DataFrame([{
                         "fieldRA": np.radians(ra_deg),
                         "fieldDec": np.radians(dec_deg),
                         "fieldID": field_id,
@@ -80,7 +80,8 @@ def build_schedule(
                         "maxAirmass": maximum_airmass,
                         "dither": dither_bool,
                         "ditherStepSize": dither_distance,
-                    }, ignore_index=True)
+                    }])
+                    schedule = pd.concat([schedule, new], ignore_index=True)
 
     schedule = schedule.astype({
         "dither": bool,
