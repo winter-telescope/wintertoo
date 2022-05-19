@@ -147,7 +147,6 @@ def validate_schedule_request(
     program_end_date = programs_query_results[0][4]
     program_base_priority = programs_query_results[0][6]
 
-
     validate_target_pi(
         schedule_request,
         program_pi=program_pi
