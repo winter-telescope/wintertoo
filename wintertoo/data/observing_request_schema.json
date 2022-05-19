@@ -23,11 +23,8 @@
   },
   "required": [
     "obsHistID",
-    "requestID",
     "fieldRA",
     "fieldDec",
-    "azimuth",
-    "altitude",
     "filter",
     "visitExpTime",
     "priority",
