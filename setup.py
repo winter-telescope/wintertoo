@@ -29,7 +29,7 @@ setuptools.setup(
         "coveralls",
         "docker",
         "pandas",
-        "psycopg2-binary",
+        "psycopg[binary]",
         "jupyter",
         "matplotlib",
         "numpy",
@@ -38,7 +38,7 @@ setuptools.setup(
         "sqlalchemy",
         "astroplan",
         "email_validator",
-        "pytz"
+        "pytz",
     ],
     package_data={
         'wintertoo': [

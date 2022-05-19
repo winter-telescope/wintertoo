@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import pytz
 from datetime import datetime
-import psycopg2
+import psycopg
 import getpass
 import logging
 from wintertoo.data import program_db_host, palomar_loc, palomar_observer, camera_field_size
@@ -177,7 +177,8 @@ def get_field_ids(ras, decs, units="degrees"):
 def get_program_details(
         program_name: str,
         user: str = None,
-        password: str = None
+        password: str = None,
+        host: str = program_db_host
 ):
 
     if user is None:
@@ -186,11 +187,8 @@ def get_program_details(
     if password is None:
         password = getpass.getpass(f"Enter password for user {user}: ")
 
-    conn = psycopg2.connect(database='commissioning', user=user, password=password, host=program_db_host)
-    cursor = conn.cursor()
-
-    command = f'''SELECT * FROM programs WHERE programs.progname = '{program_name}';'''
-    cursor.execute(command)
-    data = cursor.fetchall()
+    with psycopg.connect(f"dbname='commissioning' user={user} password={password} host={host}") as conn:
+        command = f'''SELECT * FROM programs WHERE programs.progname = '{program_name}';'''
+        data = conn.execute(command).fetchall()
 
     return data
