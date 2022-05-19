@@ -40,5 +40,8 @@ setuptools.setup(
         "email_validator",
         "pytz"
     ],
-    package_data={'wintertoo': ['data/*.json']}
+    package_data={'wintertoo': [
+        'data/*.json',
+        "data/summer_fields.txt"
+    ]}
 )
