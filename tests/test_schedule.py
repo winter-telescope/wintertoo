@@ -27,7 +27,8 @@ class TestSchedule(unittest.TestCase):
             pi="Stein",
             program_name="2021A000",
             program_id=1,
-            t_0=Time("59704", format="mjd")
+            start_time=Time(59721.1894969287, format="mjd"),
+            end_time=Time(59722.1894969452, format="mjd")
         )
         comp = pd.read_json(schedule.to_json())
         self.assertEqual(test_df.to_json(), comp.to_json())
