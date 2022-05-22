@@ -14,7 +14,7 @@ summer_filters = ["u", "g", "r", "i"]
 
 camera_field_size = 0.26112 / 2
 
-max_target_priority = 1.
+max_target_priority = 100.
 
 program_db_host = 'jagati.caltech.edu'
 
