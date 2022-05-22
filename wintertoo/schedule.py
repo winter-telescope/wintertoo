@@ -140,6 +140,7 @@ def schedule_ra_dec(
         program_name: str,
         program_id: int,
         target_priority: float = 1.,
+        program_priority: float = 0.,
         filters=None,
         t_exp: float = get_default_value("visitExpTime"),
         n_exp: int = 1,
@@ -195,6 +196,7 @@ def schedule_ra_dec(
         dither_bool=dither_bool,
         dither_distance=dither_distance,
         pi=pi,
+        program_priority=program_priority,
         program_name=program_name,
         program_id=program_id,
         csv_save_file=csv_save_file
