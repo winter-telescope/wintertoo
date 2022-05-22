@@ -97,7 +97,7 @@ def validate_target_pi(
     for _, row in schedule.iterrows():
         pi = row["programPI"]
         if pi != prog_pi:
-            err = f"Pi '{pi}' does not match PI '{prog_pi}' for program {row['progName']}"
+            err = f"Pi '{pi}' does not match database PI for program {row['progName']}"
             logger.error(err)
             raise RequestValidationError(err)
 
