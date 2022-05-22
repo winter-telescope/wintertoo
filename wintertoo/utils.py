@@ -179,7 +179,7 @@ def get_program_details(
         user: str = None,
         password: str = None,
         host: str = program_db_host
-):
+) -> pd.DataFrame:
 
     if user is None:
         user = input("Enter user: ")
@@ -189,6 +189,9 @@ def get_program_details(
 
     with psycopg.connect(f"dbname='commissioning' user={user} password={password} host={host}") as conn:
         command = f'''SELECT * FROM programs WHERE programs.progname = '{program_name}';'''
-        data = conn.execute(command).fetchall()
+        with conn.execute(command) as cursor:
+            colnames = [desc[0] for desc in cursor.description]
+            data = cursor.fetchall()
+            data = pd.DataFrame(data, columns=colnames)
 
     return data
