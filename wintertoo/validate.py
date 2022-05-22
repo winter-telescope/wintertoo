@@ -74,10 +74,10 @@ def validate_target_priority(
     )
 
     for _, row in schedule.iterrows():
-        target_priority = row["priority"]
+        target_priority = float(row["priority"])
 
         if target_priority > max_priority:
-            err = f"Target priority ({target_priority} exceeds maximum allowed value of {target_priority}." \
+            err = f"Target priority ({target_priority} exceeds maximum allowed value of {max_priority}. " \
                   f"The maximum is the sum of the overall max target priority ({max_target_priority}) " \
                   f"and the program priority ({program_base_priority})."
             logger.error(err)
@@ -95,9 +95,9 @@ def validate_target_pi(
         prog_pi: str
 ):
     for _, row in schedule.iterrows():
-        pi = row["pi"]
+        pi = row["programPI"]
         if pi != prog_pi:
-            err = f"Pi '{pi}' does not match PI for program {program_name}"
+            err = f"Pi '{pi}' does not match PI '{prog_pi}' for program {row['progName']}"
             logger.error(err)
             raise RequestValidationError(err)
 
@@ -152,24 +152,31 @@ def validate_schedule_request(
             password=program_db_password,
             host=program_db_host_name
         )
-        program_details = programs_query_results[0]
 
-        program_pi = programs_query_results[0][2]
-        program_start_date = programs_query_results[0][3]
-        program_end_date = programs_query_results[0][4]
-        program_base_priority = programs_query_results[0][6]
+        if len(programs_query_results) == 0:
+            raise ValidationError(f"Found no match in program database for program {program_name}")
 
+        elif len(programs_query_results) > 1:
+            raise ValidationError(f"Found multiple matches in program database for {program_name}:"
+                                  f" \n {programs_query_results}")
+
+        program_pi = programs_query_results["piname"].iloc[0].strip()
         validate_target_pi(
             res,
             prog_pi=program_pi
         )
+
+        program_base_priority = programs_query_results["basepriority"].iloc[0]
+        validate_target_priority(
+            res,
+            program_base_priority=program_base_priority
+        )
+
+        program_start_date = programs_query_results["startdate"].iloc[0]
+        program_end_date = programs_query_results["enddate"].iloc[0]
         validate_target_dates(
             res,
             program_start_date=program_start_date,
             program_end_date=program_end_date
-        )
-        validate_target_priority(
-            res,
-            program_base_priority=program_base_priority
         )
 
