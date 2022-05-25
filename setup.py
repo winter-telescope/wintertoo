@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="wintertoo",
-    version="0.2.1",
+    version="0.3.0",
     author="Danielle Frostig, Viraj Karambelkar, Robert Stein",
     long_description=long_description,
     long_description_content_type="text/markdown",
