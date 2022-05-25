@@ -1,6 +1,4 @@
 import pandas as pd
-import os
-import numpy as np
 from astropy.time import Time
 from astropy import units as u
 import logging
@@ -30,7 +28,7 @@ def build_schedule(
         filters: list = None,
         texp: float = get_default_value("visitExpTime"),
         nexp: int = 1,
-        dither_bool: bool = get_default_value("dither"),
+        n_dither: int = get_default_value("ditherNumber"),
         dither_distance: float = get_default_value("ditherStepSize"),
         maximum_airmass: float = get_default_value("maxAirmass"),
         target_priorities: list = None,
@@ -56,33 +54,29 @@ def build_schedule(
         for f in filters:
             for _ in range(nexp):
                 new = pd.DataFrame([{
-                    "fieldRA": np.radians(ra_deg),
-                    "fieldDec": np.radians(dec_deg),
+                    "raDeg": ra_deg,
+                    "decDeg": dec_deg,
                     "fieldID": field_id,
-                    "azimuth": -100,
-                    "altitude": -100,
                     "filter": f,
                     "visitExpTime": texp,
                     "priority": priority,
-                    "programPI": pi,
+                    "progPI": pi,
                     "progName": program_name,
                     "progID": program_id,
                     "validStart": start_time.mjd,
                     "validStop": end_time.mjd,
                     "observed": False,
                     "maxAirmass": maximum_airmass,
-                    "dither": dither_bool,
+                    "ditherNumber": n_dither,
                     "ditherStepSize": dither_distance,
                 }])
                 schedule = pd.concat([schedule, new], ignore_index=True)
 
     schedule = schedule.astype({
-        "dither": bool,
         "observed": bool
     })
 
     schedule["obsHistID"] = range(len(schedule))
-    schedule["requestID"] = range(len(schedule))
 
     validate_schedule_df(schedule)
 
@@ -106,7 +100,7 @@ def make_schedule(
         program_priority: float = 0.,
         t_exp: float = get_default_value("visitExpTime"),
         n_exp: int = 1,
-        dither_bool: bool = get_default_value("dither"),
+        n_dither: int = get_default_value("ditherNumber"),
         dither_distance: float = get_default_value("ditherStepSize"),
         maximum_airmass: float = get_default_value("maxAirmass"),
         csv_save_file: str = None,
@@ -125,7 +119,7 @@ def make_schedule(
         program_priority=program_priority,
         texp=t_exp,
         nexp=n_exp,
-        dither_bool=dither_bool,
+        n_dither=n_dither,
         dither_distance=dither_distance,
         maximum_airmass=maximum_airmass,
         csv_save_file=csv_save_file,
@@ -144,7 +138,7 @@ def schedule_ra_dec(
         filters=None,
         t_exp: float = get_default_value("visitExpTime"),
         n_exp: int = 1,
-        dither_bool: bool = get_default_value("dither"),
+        n_dither: int = get_default_value("ditherNumber"),
         dither_distance: float = get_default_value("ditherStepSize"),
         start_time: Time = None,
         end_time: Time = None,
@@ -159,7 +153,7 @@ def schedule_ra_dec(
 
     if end_time is None:
         logger.info(f"No end time specified. Using '1 day from now' as end time.")
-        end_time = Time.now() + 1*u.day
+        end_time = Time.now() + 1.*u.day
 
     if summer:
         get_best_field = get_best_summer_field
@@ -193,7 +187,7 @@ def schedule_ra_dec(
         target_priorities=[target_priority for _ in filters],
         t_exp=t_exp,
         n_exp=n_exp,
-        dither_bool=dither_bool,
+        n_dither=n_dither,
         dither_distance=dither_distance,
         pi=pi,
         program_priority=program_priority,

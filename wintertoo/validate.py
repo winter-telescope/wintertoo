@@ -42,8 +42,8 @@ def validate_target_visibility(
 ):
     for _, row in schedule.iterrows():
 
-        ra = row["fieldRA"] * u.radian
-        dec = row["fieldDec"] * u.radian
+        ra = row["raDeg"] * u.degrees
+        dec = row["decDeg"] * u.degrees
 
         for time_mjd in [row["validStart"], row["validStop"]]:
             t = Time(time_mjd, format="mjd")
@@ -95,7 +95,7 @@ def validate_target_pi(
         prog_pi: str
 ):
     for _, row in schedule.iterrows():
-        pi = row["programPI"]
+        pi = row["progPI"]
         if pi != prog_pi:
             err = f"Pi '{pi}' does not match database PI for program {row['progName']}"
             logger.error(err)
