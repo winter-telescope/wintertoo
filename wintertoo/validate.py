@@ -42,8 +42,8 @@ def validate_target_visibility(
 ):
     for _, row in schedule.iterrows():
 
-        ra = row["raDeg"] * u.degrees
-        dec = row["decDeg"] * u.degrees
+        ra = row["raDeg"] * u.deg
+        dec = row["decDeg"] * u.deg
 
         for time_mjd in [row["validStart"], row["validStop"]]:
             t = Time(time_mjd, format="mjd")
