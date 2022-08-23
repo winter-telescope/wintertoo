@@ -137,22 +137,18 @@ def validate_schedule_request(
 ):
     validate_schedule_df(schedule_request)
     validate_target_visibility(schedule_request)
-
     prog_names = list(set(schedule_request["progName"]))
-
     for program_name in prog_names:
 
         res = schedule_request[schedule_request["progName"] == program_name]
 
         # Check request using program info
-
         programs_query_results = get_program_details(
             program_name,
             user=program_db_user,
             password=program_db_password,
             host=program_db_host_name
         )
-
         if len(programs_query_results) == 0:
             raise ValidationError(f"Found no match in program database for program {program_name}")
 
