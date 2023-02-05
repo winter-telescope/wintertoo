@@ -16,7 +16,7 @@ camera_field_size = 0.26112 / 2
 
 max_target_priority = 100.
 
-program_db_host = 'jagati.caltech.edu'
+program_db_host = 'winter.caltech.edu'
 
 too_schedule_config_path = os.path.join(data_dir, "observing_request_schema.json")
 
