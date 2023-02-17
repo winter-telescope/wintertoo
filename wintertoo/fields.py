@@ -138,7 +138,7 @@ def plot_overlapping_summer_fields(
     field_df: pd.DataFrame,
     ra_deg: float,
     dec_deg: float,
-    closest: pd.DataFrame | pd.Series = None,
+    closest: pd.DataFrame = None,
 ) -> Axes:
     """
     Plot summer fields overlapping a given ra/dex
