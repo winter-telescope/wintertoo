@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Jan 25 13:51:59 2022
-
 @author: frostig, belatedly edited by Robert Stein
 """
 import getpass
@@ -32,7 +31,6 @@ def get_program_details(  # pylint: disable=too-many-arguments
 ) -> pd.DataFrame:
     """
     Get details of chosen program
-
     :param program_name: Name of program (e.g. 2020A001)
     :param program_api_key: program api key
     :param program_db_user: user of program database
@@ -76,7 +74,6 @@ def get_program_details(  # pylint: disable=too-many-arguments
 def get_alt_az(times_mjd: list, ra: float, dec: float) -> tuple:
     """
     Get alt and az for a target at various times in decimal degrees
-
     :param times_mjd: list of times
     :param ra: ra
     :param dec: dec
@@ -97,7 +94,6 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
     date in MJD (median Julian Date), e.g. 59480 (Sept 23)
     ra (right ascension) in hours, minutes, seconds, e.g. '+19h50m41s'
     dec (declination) in hours, minutes, seconds, e.g. '+08d50m58s'
-
     :param time_mjd: time in mjd
     :param ra: ra of target
     :param dec: dec of target

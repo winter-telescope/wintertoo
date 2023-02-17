@@ -1,13 +1,11 @@
 """
 Module for validating ToO requests
 """
-import getpass
 import json
 import logging
 
 import astropy.time
 import pandas as pd
-import psycopg
 from astropy import units as u
 from astropy.time import Time
 from jsonschema import ValidationError, validate
@@ -37,7 +35,6 @@ def get_and_validate_program_details(  # pylint: disable=too-many-arguments
 ) -> pd.DataFrame:
     """
     Get details of chosen program
-
     :param program_name: Name of program (e.g. 2020A001)
     :param program_api_key: program api key
     :param program_db_user: user of program database
@@ -74,7 +71,6 @@ def validate_schedule_json(data: dict):
     """
     Validates that a schedule json matches the ToO database schema.
     Returns nothing, but raises an error if needed.
-
     :param data: data to validate
     :return: None
     """
@@ -92,7 +88,6 @@ def validate_schedule_json(data: dict):
 def validate_schedule_df(df: pd.DataFrame):
     """
     Validate a schedule dataframe
-
     :param df: dataframe
     :return: None
     """
@@ -105,7 +100,6 @@ def validate_target_visibility(schedule: pd.DataFrame):
     """
     Validate that requested targets in a schedule are visible.
     Returns nothing, but raises errors as required.
-
     :param schedule: Schedule to check
     :return: None
     """
@@ -132,7 +126,6 @@ def calculate_overall_priority(
 ) -> float:
     """
     Calculate the overall priority for a target
-
     :param target_priority: User-assigned priority
     :param program_base_priority: Underlying program priority
     :return: overall priority
@@ -144,7 +137,6 @@ def validate_target_priority(schedule: pd.DataFrame, program_base_priority: floa
     """
     Validates the priority assigned to each target does not exceed
     the maximum allowed for the particular program. If not, raises an error.
-
     :param schedule: schedule to check
     :param program_base_priority: base priority of program
     :return: None.
@@ -170,7 +162,6 @@ def validate_target_priority(schedule: pd.DataFrame, program_base_priority: floa
 def validate_filter(filter_name: str):
     """
     Validates that the chosen filters are indeed SUMMER filters. Not case-sensitive.
-
     :param filter_name: name of filter
     :return:
     """
@@ -181,7 +172,6 @@ def validate_target_pi(schedule: pd.DataFrame, prog_pi: str):
     """
     Validate that the program PI matches recorded PI of program.
     Raises an error if not.
-
     :param schedule: Schedule to check
     :param prog_pi: true program PI
     :return: None.
@@ -204,7 +194,6 @@ def validate_target_dates(
     This includes that the program is still throughout,
     and that the start time is before the end time.
     Raises an error if not.
-
     :param schedule: Schedule to check
     :param program_start_date: start date of program
     :param program_end_date: end date of program
@@ -243,7 +232,6 @@ def validate_schedule_request(
     """
     Central to validate that a schedule request is allowed.
     Raises an error if not.
-
     :param schedule_request: Schedule to validate
     :param program_name: name of program e.g 2020A000
     :param program_api_key: unique API key for program

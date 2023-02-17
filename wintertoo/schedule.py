@@ -36,7 +36,6 @@ def make_schedule(
 ) -> pd.DataFrame:
     """
     Function to build a combined ToO request for several requests.
-
     :param ra_degs: list of RAs
     :param dec_degs: list of decs
     :param field_ids: list of field IDs
@@ -180,7 +179,6 @@ def schedule_ra_dec(
 ) -> pd.DataFrame:
     """
     Generate a schedule for a specific RA/dec pair
-
     :param ra_deg: RA
     :param dec_deg: dec
     :param pi: Name of program PI
@@ -250,7 +248,6 @@ def schedule_field(
 ) -> pd.DataFrame:
     """
     Generate a schedule for a specific field
-
     :param field_id: field ID
     :param pi: Name of program PI
     :param program_name: Name of program

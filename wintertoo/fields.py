@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 def get_fields(summer: bool = False) -> pd.DataFrame:
     """
     Get field table for either summer or winter
-
     :param summer: boolean whether to use summer grid
     :return: field dataframe
     """
@@ -31,7 +30,6 @@ def get_fields(summer: bool = False) -> pd.DataFrame:
 def get_base_width(summer: bool = False) -> float:
     """
     Get base width of field
-
     :param summer: boolean whether to use summer (or winter)
     :return: width in deg
     """
@@ -41,7 +39,6 @@ def get_base_width(summer: bool = False) -> float:
 def get_field_info(field_id: int, summer: bool = False) -> pd.Series:
     """
     Get info from field table for a particular field ID
-
     :param field_id: ID of field
     :param summer: boolean whether to use summer field table
     :return: Series for matching field
@@ -65,7 +62,6 @@ def get_fields_in_box(
 ) -> pd.DataFrame:
     """
     Return all fields within a particular rectangle
-
     :param ra_lim: tuple of lower, upper RA values
     :param dec_lim: tuple of lower, upper dec values
     :param summer: boolean to use SUMMER grid rather than WINTER
@@ -86,7 +82,6 @@ def get_overlapping_fields(
 ) -> pd.DataFrame:
     """
     Get all fields overlapping a particular RA/dec
-
     :param ra_deg: Ra
     :param dec_deg: dec
     :param summer: boolean whether to use summer field grid
@@ -114,7 +109,6 @@ def plot_field_rectangles(
 ):
     """
     Function to plot field contours
-
     :param ax: axis
     :param field_df: dataframe of fields
     :param color: color for the field edge color
@@ -145,7 +139,6 @@ def plot_overlapping_fields(
 ) -> Axes:
     """
     Plot summer fields overlapping a given ra/dex
-
     :param field_df: field dataframe
     :param ra_deg: ra
     :param dec_deg: dec
@@ -170,7 +163,6 @@ def get_best_field(
     """
     Get the 'best' summer field for a given ra/dec,
     where best is defined as the field with a center closest to the value
-
     :param ra_deg: ra
     :param dec_deg: dec
     :param summer: boolean whether to use summer field grid
@@ -205,7 +197,6 @@ def plot_fields(
 ) -> Axes:
     """
     Plot fields within a rectangle
-
     :param field_df: dataframe of fields
     :param ra_lim: tuple of lower, upper ra values
     :param dec_lim: tuple of lower, upper dec values
