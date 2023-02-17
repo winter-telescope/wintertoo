@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "wintertoo"
+version = "0.4.0"
+description = ""
+authors = [
+    "Danielle Frostig <frostig@mit.edu>",
+    "Viraj Karambelkar <viraj@astro.caltech.edu>",
+    "Robert Stein <rdstein@caltech.edu>"
+]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "^1.5.3"
+astropy = "^5.2.1"
+astroplan = "^0.8"
+matplotlib = "^3.7.0"
+numpy = "^1.24.2"
+pytz = "^2022.7.1"
+psycopg = "^3.1.8"
+black = "^23.1.0"
+isort = "^5.12.0"
+pylint = "^2.16.2"
+
+[tool.isort]
+profile = "black"
+
+[tool.pylint.format]
+max-line-length = "88"
+disable=["logging-fstring-interpolation"]
+good-names=["ax", "ra", "df", "pi", "i"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
