@@ -86,9 +86,7 @@ def get_best_summer_field(ra_deg, dec_deg, make_plot: bool = False) -> pd.Series
     return closest.iloc[0]
 
 
-def plot_field_rectangles(
-    ax: Axes, field_df: pd.DataFrame | pd.Series, color: str = "k"
-):
+def plot_field_rectangles(ax: Axes, field_df: pd.DataFrame, color: str = "k"):
     """
     Function to plot field contours
 
