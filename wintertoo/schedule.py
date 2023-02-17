@@ -2,7 +2,6 @@
 Module for generating schedules
 """
 import logging
-from pathlib import Path
 
 import pandas as pd
 from astropy import units as u
@@ -127,7 +126,7 @@ def schedule_ra_dec(
     end_time: Time = None,
     summer: bool = True,
     use_field: bool = True,
-    csv_save_file: str | Path = None,
+    csv_save_file: str = None,
 ) -> pd.DataFrame:
     """
     Generate a schedule for a specific RA/dec pair
