@@ -1,38 +1,48 @@
+"""
+Central module for general data and telescope constants
+"""
 import json
-
-import pandas as pd
 import os
-import astropy.coordinates as coords
+from pathlib import Path
+
 import astroplan
+import astropy.coordinates as coords
+import pandas as pd
 
-data_dir = os.path.dirname(__file__)
+data_dir = Path(__file__).parent.resolve()
 
-summer_fields_path = os.path.join(data_dir, "summer_fields.txt")
-summer_fields = pd.read_csv(summer_fields_path, sep='\s+')
+summer_fields_path = data_dir.joinpath("summer_fields.txt")
+summer_fields = pd.read_csv(summer_fields_path, sep=r"\s+")
 
-summer_filters = ["u", "g", "r", "i"]
+SUMMER_FILTERS = ["u", "g", "r", "i"]
 
-camera_field_size = 0.26112 / 2
+SUMMER_CAMERA_SIZE = 0.26112 / 2
 
-max_target_priority = 100.
+MAX_TARGET_PRIORITY = 100.0
 
-program_db_host = 'jagati.caltech.edu'
+PROGRAM_DB_HOST = "jagati.caltech.edu"
 
-too_schedule_config_path = os.path.join(data_dir, "observing_request_schema.json")
+too_schedule_config_path = data_dir.joinpath("observing_request_schema.json")
 
 with open(too_schedule_config_path, "rb") as f:
     too_db_schedule_config = json.load(f)
 
 
-def get_default_value(
-        key: str
-):
+def get_default_value(key: str):
+    """
+    Get default value for a parameter.
+
+    :param key: Key to check
+    :return: default value
+    """
     return too_db_schedule_config["properties"][key]["default"]
 
 
 # define location of Palomar Observatory
-palomar_loc = coords.EarthLocation(lat=coords.Latitude('33d21m25.5s'),
-                                   lon=coords.Longitude('-116d51m58.4s'),
-                                   height=1696.)
+PALOMAR_LOC = coords.EarthLocation(
+    lat=coords.Latitude("33d21m25.5s"),
+    lon=coords.Longitude("-116d51m58.4s"),
+    height=1696.0,
+)
 
-palomar_observer = astroplan.Observer(location=palomar_loc)
+palomar_observer = astroplan.Observer(location=PALOMAR_LOC)
