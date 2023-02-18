@@ -22,6 +22,57 @@ logger = logging.getLogger(__name__)
 MINIMUM_ELEVATION = 20.0
 
 
+def get_program_details(  # pylint: disable=too-many-arguments
+    program_name: str,
+    program_api_key: str,
+    program_db_user: str = None,
+    program_db_password: str = None,
+    program_db_host: str = PROGRAM_DB_HOST,
+    program_db_name: str = "summer",
+) -> pd.DataFrame:
+    """
+    Get details of chosen program
+
+    :param program_name: Name of program (e.g. 2020A001)
+    :param program_api_key: program api key
+    :param program_db_user: user of program database
+    :param program_db_password: password of program database
+    :param program_db_host: host of program database
+    :param program_db_name: name of database containing program table
+    :return: dataframe of program
+    """
+
+    if program_db_user is None:
+        program_db_user = input("Enter program_db_user: ")
+
+    if program_db_password is None:
+        program_db_password = getpass.getpass(
+            f"Enter password for program_db_user {program_db_user}: "
+        )
+
+    with psycopg.connect(  # pylint: disable=not-context-manager
+        f"dbname='{program_db_name}' user={program_db_user} "
+        f"password={program_db_password} host={program_db_host}"
+    ) as conn:
+        command = (
+            f"SELECT * FROM programs "
+            f"WHERE programs.progname = '{program_name}' AND "
+            f"programs.prog_api_key = '{program_api_key}';"
+        )
+        with conn.execute(command) as cursor:
+            colnames = [desc[0] for desc in cursor.description]
+            data = cursor.fetchall()
+            data = pd.DataFrame(data, columns=colnames)
+
+    for col in ["startdate", "enddate"]:
+        data[col] = data[col].astype(str)
+
+    data.drop("id", inplace=True, axis=1)
+    data["prog_api_key"] = program_api_key
+
+    return data
+
+
 def get_alt_az(times_mjd: list, ra: float, dec: float) -> tuple:
     """
     Get alt and az for a target at various times in decimal degrees
@@ -86,44 +137,3 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
         avail_bool = False
 
     return avail_bool, is_available
-
-
-def get_program_details(  # pylint: disable=too-many-arguments
-    program_name: str,
-    program_api_key: str,
-    db_user: str = None,
-    db_password: str = None,
-    db_host: str = PROGRAM_DB_HOST,
-    db_name: str = "summer",
-) -> pd.DataFrame:
-    """
-    Get details of chosen program
-
-    :param program_name: Name of program (e.g 2020A001)
-    :param program_api_key: program api key
-    :param db_user: user of program database
-    :param db_password: password of program database
-    :param db_host: host of program database
-    :param db_name: name of database containing program table
-    :return: dataframe of program
-    """
-    if db_user is None:
-        db_user = input("Enter db_user: ")
-
-    if db_password is None:
-        db_password = getpass.getpass(f"Enter password for db_user {db_user}: ")
-
-    with psycopg.connect(  # pylint: disable=not-context-manager
-        f"dbname='{db_name}' user={db_user} " f"password={db_password} host={db_host}"
-    ) as conn:
-        command = (
-            f"SELECT * FROM programs "
-            f"WHERE programs.progname = '{program_name}' AND "
-            f"programs.prog_api_key = '{program_api_key}';"
-        )
-        with conn.execute(command) as cursor:
-            colnames = [desc[0] for desc in cursor.description]
-            data = cursor.fetchall()
-            data = pd.DataFrame(data, columns=colnames)
-
-    return data

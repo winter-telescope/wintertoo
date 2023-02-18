@@ -15,6 +15,7 @@ summer_fields_path = data_dir.joinpath("summer_fields.txt")
 summer_fields = pd.read_csv(summer_fields_path, sep=r"\s+")
 
 SUMMER_FILTERS = ["u", "g", "r", "i"]
+WINTER_FILTERS = ["Y", "J", "Hs"]
 
 SUMMER_CAMERA_SIZE = 0.26112 / 2
 

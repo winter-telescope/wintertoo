@@ -1,11 +1,13 @@
 """
 Module for validating ToO requests
 """
+import getpass
 import json
 import logging
 
 import astropy.time
 import pandas as pd
+import psycopg
 from astropy import units as u
 from astropy.time import Time
 from jsonschema import ValidationError, validate
@@ -22,7 +24,50 @@ logger = logging.getLogger(__name__)
 
 
 class RequestValidationError(Exception):
-    """Error relating to a ToO request validation"""
+    """Error relating to a request validation"""
+
+
+def get_and_validate_program_details(  # pylint: disable=too-many-arguments
+    program_name: str,
+    program_api_key: str,
+    program_db_user: str = None,
+    program_db_password: str = None,
+    program_db_host: str = PROGRAM_DB_HOST,
+    program_db_name: str = "summer",
+) -> pd.DataFrame:
+    """
+    Get details of chosen program
+
+    :param program_name: Name of program (e.g. 2020A001)
+    :param program_api_key: program api key
+    :param program_db_user: user of program database
+    :param program_db_password: password of program database
+    :param program_db_host: host of program database
+    :param program_db_name: name of database containing program table
+    :return: dataframe of program
+    """
+
+    data = get_program_details(
+        program_name=program_name,
+        program_api_key=program_api_key,
+        program_db_user=program_db_user,
+        program_db_password=program_db_password,
+        program_db_host=program_db_host,
+        program_db_name=program_db_name,
+    )
+
+    if len(data) == 0:
+        raise RequestValidationError(
+            f"Found no match in program database for combination of "
+            f"program={program_name} and api_key={program_api_key}"
+        )
+
+    if len(data) > 1:
+        raise RequestValidationError(
+            f"Found multiple matches in program database for {program_name}:"
+        )
+
+    return data.iloc[0]
 
 
 def validate_schedule_json(data: dict):
@@ -144,9 +189,9 @@ def validate_target_pi(schedule: pd.DataFrame, prog_pi: str):
     for _, row in schedule.iterrows():
         pi = row["progPI"]
         if pi != prog_pi:
-            err = f"Pi '{pi}' does not match database PI for program {row['progName']}"
-            logger.error(err)
-            raise RequestValidationError(err)
+            # err = f"Pi '{pi}' does not match database PI for program {row['progName']}"
+            # logger.error(err)
+            raise RequestValidationError()
 
 
 def validate_target_dates(
@@ -189,64 +234,52 @@ def validate_target_dates(
 
 def validate_schedule_request(
     schedule_request: pd.DataFrame,
+    program_name: str,
     program_api_key: str,
     program_db_user: str = None,
     program_db_password: str = None,
-    program_db_host_name: str = PROGRAM_DB_HOST,
+    program_db_host: str = PROGRAM_DB_HOST,
 ):
     """
     Central to validate that a schedule request is allowed.
     Raises an error if not.
 
     :param schedule_request: Schedule to validate
+    :param program_name: name of program e.g 2020A000
     :param program_api_key: unique API key for program
     :param program_db_user:  user for the programs database
     :param program_db_password: password for the programs database
-    :param program_db_host_name: host of the programs database
+    :param program_db_host: host of the programs database
     :return: None
     """
     validate_schedule_df(schedule_request)
     validate_target_visibility(schedule_request)
     prog_names = list(set(schedule_request["progName"]))
-    for program_name in prog_names:
-        res = schedule_request[schedule_request["progName"] == program_name]
+    assert len(prog_names) == 1
 
-        # Check request using program info
-        programs_query_results = get_program_details(
-            program_name,
-            program_api_key=program_api_key,
-            db_user=program_db_user,
-            db_password=program_db_password,
-            db_host=program_db_host_name,
-        )
+    # Check request using program info
+    programs_query_results = get_and_validate_program_details(
+        program_name=program_name,
+        program_api_key=program_api_key,
+        program_db_user=program_db_user,
+        program_db_password=program_db_password,
+        program_db_host=program_db_host,
+    )
 
-        if len(programs_query_results) == 0:
-            raise ValidationError(
-                f"Found no match in program database for program {program_name}"
-            )
+    program_pi = programs_query_results["piname"].strip()
+    validate_target_pi(schedule_request, prog_pi=program_pi)
 
-        if len(programs_query_results) > 1:
-            raise ValidationError(
-                f"Found multiple matches in program database for {program_name}:"
-                f" \n {programs_query_results}"
-            )
+    program_base_priority = programs_query_results["basepriority"]
+    validate_target_priority(
+        schedule_request, program_base_priority=program_base_priority
+    )
 
-        program_pi = programs_query_results["piname"].iloc[0].strip()
-        validate_target_pi(res, prog_pi=program_pi)
+    program_start_date = Time(str(programs_query_results["startdate"]), format="isot")
 
-        program_base_priority = programs_query_results["basepriority"].iloc[0]
-        validate_target_priority(res, program_base_priority=program_base_priority)
+    program_end_date = Time(str(programs_query_results["enddate"]), format="isot")
 
-        program_start_date = Time(
-            str(programs_query_results["startdate"].iloc[0]), format="isot"
-        )
-
-        program_end_date = Time(
-            str(programs_query_results["enddate"].iloc[0]), format="isot"
-        )
-
-        validate_target_dates(
-            res,
-            program_start_date=program_start_date,
-            program_end_date=program_end_date,
-        )
+    validate_target_dates(
+        schedule_request,
+        program_start_date=program_start_date,
+        program_end_date=program_end_date,
+    )

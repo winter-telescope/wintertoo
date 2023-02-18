@@ -73,30 +73,26 @@ def make_schedule(
 
         for filter_name in filters:
             for _ in range(nexp):
-                new = pd.DataFrame(
-                    [
-                        {
-                            "raDeg": ra_deg,
-                            "decDeg": dec_deg,
-                            "fieldID": field_id,
-                            "filter": filter_name,
-                            "visitExpTime": texp,
-                            "priority": priority,
-                            "progPI": pi,
-                            "progName": program_name,
-                            "progID": program_id,
-                            "validStart": start_time.mjd,
-                            "validStop": end_time.mjd,
-                            "observed": False,
-                            "maxAirmass": maximum_airmass,
-                            "ditherNumber": n_dither,
-                            "ditherStepSize": dither_distance,
-                        }
-                    ]
-                )
+                new = {
+                    "raDeg": ra_deg,
+                    "decDeg": dec_deg,
+                    "fieldID": field_id,
+                    "filter": filter_name,
+                    "visitExpTime": texp,
+                    "priority": priority,
+                    "progPI": pi,
+                    "progName": program_name,
+                    "progID": program_id,
+                    "validStart": start_time.mjd,
+                    "validStop": end_time.mjd,
+                    "observed": False,
+                    "maxAirmass": maximum_airmass,
+                    "ditherNumber": n_dither,
+                    "ditherStepSize": dither_distance,
+                }
                 all_entries.append(new)
 
-    schedule = pd.concat(all_entries, ignore_index=True)
+    schedule = pd.DataFrame(all_entries)
     schedule = schedule.astype({"observed": bool})
 
     schedule["obsHistID"] = range(len(schedule))
@@ -181,13 +177,13 @@ def schedule_ra_dec(
         field_id = get_default_value("fieldID")
 
     schedule = make_schedule(
-        ra_degs=[ra_deg for _ in filters],
-        dec_degs=[dec_deg for _ in filters],
-        field_ids=[field_id for _ in filters],
-        start_times=[start_time for _ in filters],
-        end_times=[end_time for _ in filters],
+        ra_degs=[ra_deg],
+        dec_degs=[dec_deg],
+        field_ids=[field_id],
+        start_times=[start_time],
+        end_times=[end_time],
         filters=filters,
-        target_priorities=[target_priority for _ in filters],
+        target_priorities=[target_priority],
         texp=t_exp,
         nexp=n_exp,
         n_dither=n_dither,
