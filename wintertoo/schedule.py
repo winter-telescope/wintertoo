@@ -7,8 +7,8 @@ import pandas as pd
 from astropy import units as u
 from astropy.time import Time
 
-from wintertoo.data import SUMMER_FILTERS, get_default_value
-from wintertoo.fields import get_best_summer_field
+from wintertoo.data import SUMMER_FILTERS, WINTER_FILTERS, get_default_value
+from wintertoo.fields import get_best_field, get_field_info
 from wintertoo.validate import calculate_overall_priority, validate_schedule_df
 
 logger = logging.getLogger(__name__)
@@ -105,6 +105,60 @@ def make_schedule(
     return schedule
 
 
+def build_schedule_list(
+    ra_deg: float,
+    dec_deg: float,
+    field_id: int,
+    pi: str,
+    program_name: str,
+    program_id: int,
+    target_priority: float,
+    program_priority: float,
+    t_exp: float,
+    n_exp: int,
+    n_dither: int,
+    dither_distance: float,
+    start_time: Time,
+    end_time: Time,
+    summer: bool = True,
+    filters=None,
+    csv_save_file: str = None,
+):
+    if summer:
+        default_filters = SUMMER_FILTERS
+    else:
+        default_filters = WINTER_FILTERS
+
+    if filters is None:
+        logger.info(f"No filters specified. Using all as default: {default_filters}.")
+        filters = default_filters
+    if not isinstance(filters, list):
+        filters = [filters]
+
+    for x in filters:
+        assert x in default_filters
+
+    schedule = make_schedule(
+        ra_degs=[ra_deg],
+        dec_degs=[dec_deg],
+        field_ids=[field_id],
+        start_times=[start_time],
+        end_times=[end_time],
+        filters=filters,
+        target_priorities=[target_priority],
+        texp=t_exp,
+        nexp=n_exp,
+        n_dither=n_dither,
+        dither_distance=dither_distance,
+        pi=pi,
+        program_priority=program_priority,
+        program_name=program_name,
+        program_id=program_id,
+        csv_save_file=csv_save_file,
+    )
+    return schedule
+
+
 def schedule_ra_dec(
     ra_deg: float,
     dec_deg: float,
@@ -118,8 +172,8 @@ def schedule_ra_dec(
     n_exp: int = 1,
     n_dither: int = get_default_value("ditherNumber"),
     dither_distance: float = get_default_value("ditherStepSize"),
-    start_time: Time = None,
-    end_time: Time = None,
+    start_time: Time = Time.now(),
+    end_time: Time = Time.now() + 1.0 * u.day,
     summer: bool = True,
     use_field: bool = True,
     csv_save_file: str = None,
@@ -146,46 +200,88 @@ def schedule_ra_dec(
     :param csv_save_file: optional csv save path
     :return: a schedule dataframe
     """
-    if start_time is None:
-        logger.info("No start time specified. Using 'now' as start time.")
-        start_time = Time.now()
-
-    if end_time is None:
-        logger.info("No end time specified. Using '1 day from now' as end time.")
-        end_time = Time.now() + 1.0 * u.day
-
-    if summer:
-        get_best_field = get_best_summer_field
-        default_filters = SUMMER_FILTERS
-    else:
-        raise NotImplementedError
-
-    if filters is None:
-        logger.info(f"No filters specified. Using all as default: {default_filters}.")
-        filters = default_filters
-    if not isinstance(filters, list):
-        filters = [filters]
-
-    # Take RA/Dec and select nearest-centered field
 
     if use_field:
-        best_field = get_best_field(ra_deg, dec_deg)
+        best_field = get_best_field(ra_deg, dec_deg, summer=summer)
         ra_deg = best_field["RA"]
         dec_deg = best_field["Dec"]
         field_id = best_field["ID"]
     else:
         field_id = get_default_value("fieldID")
 
-    schedule = make_schedule(
-        ra_degs=[ra_deg],
-        dec_degs=[dec_deg],
-        field_ids=[field_id],
-        start_times=[start_time],
-        end_times=[end_time],
+    schedule = build_schedule_list(
+        ra_deg=ra_deg,
+        dec_deg=dec_deg,
+        field_id=field_id,
+        start_time=start_time,
+        end_time=end_time,
         filters=filters,
-        target_priorities=[target_priority],
-        texp=t_exp,
-        nexp=n_exp,
+        target_priority=target_priority,
+        t_exp=t_exp,
+        n_exp=n_exp,
+        n_dither=n_dither,
+        dither_distance=dither_distance,
+        pi=pi,
+        program_priority=program_priority,
+        program_name=program_name,
+        program_id=program_id,
+        csv_save_file=csv_save_file,
+    )
+
+    return schedule
+
+
+def schedule_field(
+    field_id: int,
+    pi: str,
+    program_name: str,
+    program_id: int,
+    target_priority: float = 1.0,
+    program_priority: float = 0.0,
+    filters=None,
+    t_exp: float = get_default_value("visitExpTime"),
+    n_exp: int = 1,
+    n_dither: int = get_default_value("ditherNumber"),
+    dither_distance: float = get_default_value("ditherStepSize"),
+    start_time: Time = Time.now(),
+    end_time: Time = Time.now() + 1.0 * u.day,
+    summer: bool = True,
+    csv_save_file: str = None,
+) -> pd.DataFrame:
+    """
+    Generate a schedule for a specific field
+
+    :param field_id: field ID
+    :param pi: Name of program PI
+    :param program_name: Name of program
+    :param program_id: Program ID -> interger for survey/Caltech/MIT/engineering
+    :param target_priority: Priority for the target
+    :param program_priority: Base priority for the program
+    :param filters: filters to use
+    :param t_exp: Length of each exposure (s)
+    :param n_exp: Number of dither sets
+    :param n_dither: Number of dithers per cycle
+    :param dither_distance: spacing (arcsec) of dither grid
+    :param start_time: start time of validity window
+    :param end_time: end time of validity window
+    :param summer: boolean whether to use summer (rather than winter)
+    :param csv_save_file: optional csv save path
+    :return: a schedule dataframe
+    """
+    field_details = get_field_info(field_id=field_id, summer=summer)
+    ra_deg = float(field_details["RA"])
+    dec_deg = float(field_details["Dec"])
+
+    schedule = build_schedule_list(
+        ra_deg=ra_deg,
+        dec_deg=dec_deg,
+        field_id=field_id,
+        start_time=start_time,
+        end_time=end_time,
+        filters=filters,
+        target_priority=target_priority,
+        t_exp=t_exp,
+        n_exp=n_exp,
         n_dither=n_dither,
         dither_distance=dither_distance,
         pi=pi,

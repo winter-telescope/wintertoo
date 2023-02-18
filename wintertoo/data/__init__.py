@@ -2,7 +2,6 @@
 Central module for general data and telescope constants
 """
 import json
-import os
 from pathlib import Path
 
 import astroplan
@@ -17,7 +16,8 @@ summer_fields = pd.read_csv(summer_fields_path, sep=r"\s+")
 SUMMER_FILTERS = ["u", "g", "r", "i"]
 WINTER_FILTERS = ["Y", "J", "Hs"]
 
-SUMMER_CAMERA_SIZE = 0.26112 / 2
+SUMMER_BASE_WIDTH = 0.26112
+WINTER_BASE_WIDTH = 1.0
 
 MAX_TARGET_PRIORITY = 100.0
 

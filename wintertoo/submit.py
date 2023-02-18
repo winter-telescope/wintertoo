@@ -30,6 +30,7 @@ def submit_schedule(
     program_db_host: str,
     program_db_user: str,
     program_db_password: str,
+    submit_trigger: bool = True,
 ):
     validate_schedule_request(
         schedule,
@@ -39,4 +40,5 @@ def submit_schedule(
         program_db_password=program_db_password,
         program_db_host=program_db_host,
     )
-    export_schedule_to_sqlitedb(schedule, save_path)
+    if submit_trigger:
+        export_schedule_to_sqlitedb(schedule, save_path)
