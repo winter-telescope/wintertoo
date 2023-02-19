@@ -123,6 +123,29 @@ def build_schedule_list(
     filters=None,
     csv_save_file: str = None,
 ):
+    """
+    Generate a full schedule request for single target,
+    with RA, Dec and Field ID required
+
+    :param ra_deg: RA
+    :param dec_deg: dec
+    :param field_id: field ID
+    :param pi: Name of program PI
+    :param program_name: Name of program
+    :param program_id: Program ID -> interger for survey/Caltech/MIT/engineering
+    :param target_priority: Priority for the target
+    :param program_priority: Base priority for the program
+    :param filters: filters to use
+    :param t_exp: Length of each exposure (s)
+    :param n_exp: Number of dither sets
+    :param n_dither: Number of dithers per cycle
+    :param dither_distance: spacing (arcsec) of dither grid
+    :param start_time: start time of validity window
+    :param end_time: end time of validity window
+    :param summer: boolean whether to use summer (rather than winter)
+    :param csv_save_file: optional csv save path
+    :return: a schedule dataframe
+    """
     if summer:
         default_filters = SUMMER_FILTERS
     else:
@@ -134,8 +157,8 @@ def build_schedule_list(
     if not isinstance(filters, list):
         filters = [filters]
 
-    for x in filters:
-        assert x in default_filters
+    for filter_name in filters:
+        assert filter_name in default_filters
 
     schedule = make_schedule(
         ra_degs=[ra_deg],

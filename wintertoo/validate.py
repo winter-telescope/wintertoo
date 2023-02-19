@@ -179,8 +179,8 @@ def validate_target_pi(schedule: pd.DataFrame, prog_pi: str):
     for _, row in schedule.iterrows():
         pi = row["progPI"]
         if pi != prog_pi:
-            # err = f"Pi '{pi}' does not match database PI for program {row['progName']}"
-            # logger.error(err)
+            err = f"Pi '{pi}' does not match database PI for program {row['progName']}"
+            logger.error(err)
             raise RequestValidationError()
 
 
@@ -221,7 +221,7 @@ def validate_target_dates(
             raise RequestValidationError(err)
 
 
-def validate_schedule_request(
+def validate_schedule_request(  # pylint: disable=too-many-arguments
     schedule_request: pd.DataFrame,
     program_name: str,
     program_api_key: str,

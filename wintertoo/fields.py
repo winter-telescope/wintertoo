@@ -187,7 +187,7 @@ def get_best_field(
     logger.info(f"Best is field {int(closest.iloc[0]['ID'])}")
 
     if make_plot:
-        plot_overlapping_fields(res, ra_deg, dec_deg, closest, summer=summer)
+        plot_overlapping_fields(res, ra_deg, dec_deg, summer=summer, closest=closest)
 
     return closest.iloc[0]
 
