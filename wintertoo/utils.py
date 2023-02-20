@@ -15,6 +15,7 @@ from astropy.coordinates import AltAz, SkyCoord
 from astropy.time import Time
 
 from wintertoo.data import PALOMAR_LOC, PROGRAM_DB_HOST, palomar_observer
+from wintertoo.models import Program
 
 logger = logging.getLogger(__name__)
 
@@ -50,23 +51,23 @@ def get_program_details(  # pylint: disable=too-many-arguments
 
     with psycopg.connect(  # pylint: disable=not-context-manager
         f"dbname='{program_db_name}' user={program_db_user} "
-        f"password={program_db_password} host={program_db_host}"
+        f"password={program_db_password} host={program_db_host}",
     ) as conn:
-        command = (
-            f"SELECT * FROM programs "
-            f"WHERE programs.progname = '{program_name}' AND "
-            f"programs.prog_api_key = '{program_api_key}';"
-        )
-        with conn.execute(command) as cursor:
+        conn.read_only = True
+        with conn.execute("SELECT * FROM programs") as cursor:
             colnames = [desc[0] for desc in cursor.description]
             data = cursor.fetchall()
             data = pd.DataFrame(data, columns=colnames)
+
+    mask = np.logical_and(
+        data["prog_api_key"] == program_api_key, data["progname"] == program_name
+    )
+    data = data[mask]
 
     for col in ["startdate", "enddate"]:
         data[col] = data[col].astype(str)
 
     data.drop("id", inplace=True, axis=1)
-    data["prog_api_key"] = program_api_key
 
     return data
 

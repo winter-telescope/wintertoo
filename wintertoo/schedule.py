@@ -9,6 +9,7 @@ from astropy.time import Time
 
 from wintertoo.data import SUMMER_FILTERS, WINTER_FILTERS, get_default_value
 from wintertoo.fields import get_best_field, get_field_info
+from wintertoo.models.too import TooRequestField, TooRequestRaDec
 from wintertoo.validate import calculate_overall_priority, validate_schedule_df
 
 logger = logging.getLogger(__name__)

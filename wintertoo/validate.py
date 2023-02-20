@@ -16,12 +16,17 @@ from wintertoo.data import (
     SUMMER_FILTERS,
     too_db_schedule_config,
 )
+from wintertoo.models import Program
 from wintertoo.utils import get_program_details, up_tonight
 
 logger = logging.getLogger(__name__)
 
 
-class RequestValidationError(Exception):
+class WinterCredentialsError(Exception):
+    """Error relating to a credentials validation"""
+
+
+class WinterValidationError(Exception):
     """Error relating to a request validation"""
 
 
@@ -32,7 +37,7 @@ def get_and_validate_program_details(  # pylint: disable=too-many-arguments
     program_db_password: str = None,
     program_db_host: str = PROGRAM_DB_HOST,
     program_db_name: str = "summer",
-) -> pd.DataFrame:
+) -> Program:
     """
     Get details of chosen program
     :param program_name: Name of program (e.g. 2020A001)
@@ -54,17 +59,18 @@ def get_and_validate_program_details(  # pylint: disable=too-many-arguments
     )
 
     if len(data) == 0:
-        raise RequestValidationError(
+        raise WinterCredentialsError(
             f"Found no match in program database for combination of "
-            f"program={program_name} and api_key={program_api_key}"
+            f"program={program_name} and api_key"
         )
 
     if len(data) > 1:
-        raise RequestValidationError(
-            f"Found multiple matches in program database for {program_name}:"
+        raise WinterCredentialsError(
+            f"Found multiple matches in program database for combination of "
+            f"program={program_name} and api_key"
         )
 
-    return data.iloc[0]
+    return Program(**data.iloc[0].to_dict())
 
 
 def validate_schedule_json(data: dict):
@@ -77,12 +83,12 @@ def validate_schedule_json(data: dict):
     try:
         validate(data, schema=too_db_schedule_config)
         logger.info("Successfully validated schema")
-    except ValidationError as exc:
+    except WinterValidationError as exc:
         logger.error(
             "Error with JSON schema validation, input data not formatted correctly."
         )
         logger.error(exc)
-        raise RequestValidationError(exc) from exc
+        raise WinterValidationError(exc) from exc
 
 
 def validate_schedule_df(df: pd.DataFrame):
@@ -118,7 +124,7 @@ def validate_target_visibility(schedule: pd.DataFrame):
                     f" {row}"
                 )
                 logger.error(err)
-                raise RequestValidationError(err)
+                raise WinterValidationError(err)
 
 
 def calculate_overall_priority(
@@ -156,7 +162,7 @@ def validate_target_priority(schedule: pd.DataFrame, program_base_priority: floa
                 f"and the program priority ({program_base_priority})."
             )
             logger.error(err)
-            raise RequestValidationError(err)
+            raise WinterValidationError(err)
 
 
 def validate_filter(filter_name: str):
@@ -181,7 +187,7 @@ def validate_target_pi(schedule: pd.DataFrame, prog_pi: str):
         if pi != prog_pi:
             err = f"Pi '{pi}' does not match database PI for program {row['progName']}"
             logger.error(err)
-            raise RequestValidationError()
+            raise WinterValidationError()
 
 
 def validate_target_dates(
@@ -218,7 +224,7 @@ def validate_target_dates(
 
         if err is not None:
             logger.error(err)
-            raise RequestValidationError(err)
+            raise WinterValidationError(err)
 
 
 def validate_schedule_request(  # pylint: disable=too-many-arguments
@@ -246,7 +252,7 @@ def validate_schedule_request(  # pylint: disable=too-many-arguments
     assert len(prog_names) == 1
 
     # Check request using program info
-    programs_query_results = get_and_validate_program_details(
+    program = get_and_validate_program_details(
         program_name=program_name,
         program_api_key=program_api_key,
         program_db_user=program_db_user,
@@ -254,17 +260,15 @@ def validate_schedule_request(  # pylint: disable=too-many-arguments
         program_db_host=program_db_host,
     )
 
-    program_pi = programs_query_results["piname"].strip()
-    validate_target_pi(schedule_request, prog_pi=program_pi)
+    validate_target_pi(schedule_request, prog_pi=program.piname)
 
-    program_base_priority = programs_query_results["basepriority"]
     validate_target_priority(
-        schedule_request, program_base_priority=program_base_priority
+        schedule_request, program_base_priority=program.basepriority
     )
 
-    program_start_date = Time(str(programs_query_results["startdate"]), format="isot")
+    program_start_date = Time(str(program.startdate), format="isot")
 
-    program_end_date = Time(str(programs_query_results["enddate"]), format="isot")
+    program_end_date = Time(str(program.enddate), format="isot")
 
     validate_target_dates(
         schedule_request,
