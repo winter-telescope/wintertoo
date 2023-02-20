@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, Extra
 
 
 class Program(BaseModel):
@@ -20,3 +20,6 @@ class Program(BaseModel):
         assert len(split[1]) == 2
         assert len(split[2]) == 2
         return value
+
+    class Config:
+        extra = Extra.forbid

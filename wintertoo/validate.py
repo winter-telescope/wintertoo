@@ -16,18 +16,11 @@ from wintertoo.data import (
     SUMMER_FILTERS,
     too_db_schedule_config,
 )
+from wintertoo.errors import WinterCredentialsError, WinterValidationError
 from wintertoo.models import Program
 from wintertoo.utils import get_program_details, up_tonight
 
 logger = logging.getLogger(__name__)
-
-
-class WinterCredentialsError(Exception):
-    """Error relating to a credentials validation"""
-
-
-class WinterValidationError(Exception):
-    """Error relating to a request validation"""
 
 
 def get_and_validate_program_details(  # pylint: disable=too-many-arguments
@@ -82,7 +75,7 @@ def validate_schedule_json(data: dict):
     """
     try:
         validate(data, schema=too_db_schedule_config)
-        logger.info("Successfully validated schema")
+        logger.debug("Successfully validated schema")
     except WinterValidationError as exc:
         logger.error(
             "Error with JSON schema validation, input data not formatted correctly."
@@ -125,6 +118,32 @@ def validate_target_visibility(schedule: pd.DataFrame):
                 )
                 logger.error(err)
                 raise WinterValidationError(err)
+
+
+def validate_obshist(schedule: pd.DataFrame):
+    """
+    Ensures that each entry in a schedule has a unique obsHistID, starting at 0.
+
+    :param schedule: Schedule to test
+    :return: None
+    """
+
+    unique_ids = set(schedule["obsHistID"].tolist())
+    if len(schedule) != len(unique_ids):
+        err = (
+            f"Each entry in schedule needs a unique 'obsHistID'. "
+            f"Here there are {len(unique_ids)} unique entries for "
+            f"{len(schedule)} entries."
+        )
+        logger.error(err)
+        raise WinterValidationError(err)
+    if min(unique_ids) != 0:
+        err = (
+            f"obsHistID values should start at zero. "
+            f"Instead the minimum value is {min(unique_ids)}."
+        )
+        logger.error(err)
+        raise WinterValidationError(err)
 
 
 def calculate_overall_priority(
@@ -248,6 +267,8 @@ def validate_schedule_request(  # pylint: disable=too-many-arguments
     """
     validate_schedule_df(schedule_request)
     validate_target_visibility(schedule_request)
+    validate_obshist(schedule_request)
+
     prog_names = list(set(schedule_request["progName"]))
     assert len(prog_names) == 1
 

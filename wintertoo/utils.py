@@ -6,6 +6,7 @@ Created on Tue Jan 25 13:51:59 2022
 """
 import getpass
 import logging
+from typing import Union
 
 import astropy.time
 import numpy as np
@@ -16,6 +17,7 @@ from astropy.time import Time
 
 from wintertoo.data import PALOMAR_LOC, PROGRAM_DB_HOST, palomar_observer
 from wintertoo.models import Program
+from wintertoo.models.too import Summer, Winter
 
 logger = logging.getLogger(__name__)
 
@@ -134,3 +136,20 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
         avail_bool = False
 
     return avail_bool, is_available
+
+
+def is_summer(too: Union[Winter, Summer]) -> bool:
+    """
+    Checks a ToO Request to ensure it is either a Summer or Winter request
+
+    :param too: ToO request
+    :return: boolean
+    """
+    if isinstance(too, Summer):
+        return True
+    elif isinstance(too, Winter):
+        return False
+    else:
+        err = f"Unrecognised ToO type {type(too)}"
+        logger.error(err)
+        raise TypeError(err)

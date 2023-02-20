@@ -34,6 +34,8 @@ profile = "black"
 max-line-length = "88"
 disable=["logging-fstring-interpolation"]
 good-names=["ax", "ra", "df", "pi", "i"]
+exclude-too-few-public-methods=["pydantic.*"]
+extension-pkg-whitelist=["pydantic"]
 
 [build-system]
 requires = ["poetry-core"]
