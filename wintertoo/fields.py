@@ -9,7 +9,12 @@ import pandas as pd
 from astropy.coordinates import SkyCoord
 from matplotlib.axes import Axes
 
-from wintertoo.data import SUMMER_BASE_WIDTH, WINTER_BASE_WIDTH, summer_fields
+from wintertoo.data import (
+    SUMMER_BASE_WIDTH,
+    WINTER_BASE_WIDTH,
+    summer_fields,
+    winter_fields,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +28,7 @@ def get_fields(summer: bool = False) -> pd.DataFrame:
     if summer:
         field_df = summer_fields
     else:
-        raise NotImplementedError
+        field_df = winter_fields
     return field_df
 
 

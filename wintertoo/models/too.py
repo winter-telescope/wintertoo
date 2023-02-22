@@ -1,7 +1,7 @@
 from typing import List, Literal, Optional, Union
 
 from astropy.time import Time
-from pydantic import BaseModel, Field, validator, Extra
+from pydantic import BaseModel, Extra, Field, validator
 
 from wintertoo.data import (
     MAX_TARGET_PRIORITY,

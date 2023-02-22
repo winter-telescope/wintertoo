@@ -15,6 +15,9 @@ data_dir = Path(__file__).parent.resolve()
 summer_fields_path = data_dir.joinpath("summer_fields.txt")
 summer_fields = pd.read_csv(summer_fields_path, sep=r"\s+")
 
+winter_fields_path = data_dir.joinpath("winter_fields.txt")
+winter_fields = pd.read_csv(winter_fields_path, sep=r"\s+")
+
 SummerFilters = Literal["u", "g", "r", "i"]
 WinterFilters = Literal["Y", "J", "Hs"]
 

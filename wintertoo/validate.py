@@ -16,9 +16,10 @@ from wintertoo.data import (
     SUMMER_FILTERS,
     too_db_schedule_config,
 )
+from wintertoo.database import get_program_details
 from wintertoo.errors import WinterCredentialsError, WinterValidationError
 from wintertoo.models import Program
-from wintertoo.utils import get_program_details, up_tonight
+from wintertoo.utils import up_tonight
 
 logger = logging.getLogger(__name__)
 
