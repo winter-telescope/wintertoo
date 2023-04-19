@@ -172,7 +172,7 @@ def schedule_ra_dec(
         best_field = get_best_field(ra_deg, dec_deg)
         ra_deg = best_field["RA"]
         dec_deg = best_field["Dec"]
-        field_id = best_field["#ID"]
+        field_id = best_field["ID"]
     else:
         field_id = get_default_value("fieldID")
 
