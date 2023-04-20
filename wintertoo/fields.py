@@ -78,7 +78,7 @@ def get_best_summer_field(ra_deg, dec_deg, make_plot: bool = False) -> pd.Series
 
     closest = res[closest_mask]
 
-    logger.info(f"Best is field {int(closest.iloc[0]['#ID'])}")
+    logger.info(f"Best is field {int(closest.iloc[0]['ID'])}")
 
     if make_plot:
         plot_overlapping_summer_fields(res, ra_deg, dec_deg, closest)
