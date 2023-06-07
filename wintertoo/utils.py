@@ -4,18 +4,16 @@
 Created on Tue Jan 25 13:51:59 2022
 @author: frostig, belatedly edited by Robert Stein
 """
-import getpass
 import logging
 from typing import Union
 
 import astropy.time
 import numpy as np
 import pandas as pd
-import psycopg
 from astropy.coordinates import AltAz, SkyCoord
 from astropy.time import Time
 
-from wintertoo.data import PALOMAR_LOC, PROGRAM_DB_HOST, palomar_observer
+from wintertoo.data import PALOMAR_LOC, palomar_observer
 from wintertoo.models.too import Summer, Winter
 
 logger = logging.getLogger(__name__)
@@ -96,13 +94,19 @@ def is_summer(too: Union[Winter, Summer]) -> bool:
     """
     if isinstance(too, Summer):
         return True
-    elif isinstance(too, Winter):
+    if isinstance(too, Winter):
         return False
-    else:
-        err = f"Unrecognised ToO type {type(too)}"
-        logger.error(err)
-        raise TypeError(err)
+
+    err = f"Unrecognised ToO type {type(too)}"
+    logger.error(err)
+    raise TypeError(err)
 
 
-def get_date(time: Time):
-    return int(str(time).split(" ")[0].replace("-", ""))
+def get_date(time: Time) -> int:
+    """
+    Get the date from a time object
+
+    :param time: Time object
+    :return: date as an integer
+    """
+    return int(str(time).split(" ", maxsplit=1)[0])

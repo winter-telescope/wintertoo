@@ -10,7 +10,7 @@ authors = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.10.0,<3.12"
+python = ">=3.9.0,<3.12"
 pandas = ">=2.0.2"
 astropy = ">=5.2.1"
 astroplan = ">=0.8"

@@ -27,8 +27,6 @@ WINTER_FILTERS = list(typing.get_args(WinterFilters))
 SUMMER_BASE_WIDTH = 0.26112
 WINTER_BASE_WIDTH = 1.0
 
-MAX_TARGET_PRIORITY = 100.0
-
 PROGRAM_DB_HOST = "jagati.caltech.edu"
 
 too_schedule_config_path = data_dir.joinpath("observing_request_schema.json")

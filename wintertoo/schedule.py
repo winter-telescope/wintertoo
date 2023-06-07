@@ -5,13 +5,13 @@ import logging
 from typing import Union
 
 import pandas as pd
-from wintertoo.models import Program
 
 from wintertoo.data import get_default_value
 from wintertoo.errors import WinterValidationError
 from wintertoo.fields import get_best_field, get_field_info
+from wintertoo.models import Program
 from wintertoo.models.too import (
-    ALL_TOO_CLASSES,
+    AllTooClasses,
     FullTooRequest,
     SummerFieldToO,
     SummerRaDecToO,
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 def make_schedule(
-    too: Union[FullTooRequest | list[FullTooRequest]],
+    toos: Union[FullTooRequest | list[FullTooRequest]],
     program: Program,
     csv_save_file: str = None,
 ) -> pd.DataFrame:
@@ -38,13 +38,12 @@ def make_schedule(
     :return: schedule dataframe
     """
 
-    if not isinstance(too, list):
-        too = [too]
+    if not isinstance(toos, list):
+        toos = [toos]
 
     all_entries = []
 
-    for too in too:
-
+    for too in toos:
         for filter_name in too.filters:
             for _ in range(too.n_exp):
                 new = {
@@ -94,7 +93,7 @@ def build_schedule_list(
     :return: a schedule dataframe
     """
     schedule = make_schedule(
-        too=too,
+        toos=too,
         program=program,
         csv_save_file=csv_save_file,
     )
@@ -125,7 +124,7 @@ def schedule_ra_dec(
     full_request = FullTooRequest(field_id=field_id, **too.dict())
 
     schedule = make_schedule(
-        too=full_request,
+        toos=full_request,
         program=program,
         csv_save_file=csv_save_file,
     )
@@ -156,7 +155,7 @@ def schedule_field(
     full_request = FullTooRequest(ra_deg=ra_deg, dec_deg=dec_deg, **too.dict())
 
     schedule = make_schedule(
-        too=full_request,
+        toos=full_request,
         program=program,
         csv_save_file=csv_save_file,
     )
@@ -165,7 +164,7 @@ def schedule_field(
 
 
 def concat_toos(
-    requests: list[ALL_TOO_CLASSES],
+    requests: list[AllTooClasses],
     program: Program,
 ) -> pd.DataFrame:
     """
@@ -177,7 +176,7 @@ def concat_toos(
     """
     schedule = []
 
-    for i, too in enumerate(requests):
+    for too in requests:
         if isinstance(too, Union[SummerFieldToO, WinterFieldToO]):
             res = schedule_field(
                 too=too,

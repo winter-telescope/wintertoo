@@ -1,10 +1,12 @@
-from typing import List, Literal, Optional, Union
+"""
+Models for ToO requests
+"""
+from typing import List, Optional, Union
 
 from astropy.time import Time
 from pydantic import BaseModel, Extra, Field, validator
 
 from wintertoo.data import (
-    MAX_TARGET_PRIORITY,
     SUMMER_FILTERS,
     WINTER_FILTERS,
     SummerFilters,
@@ -15,11 +17,15 @@ from wintertoo.errors import WinterValidationError
 
 
 class ToORequest(BaseModel):
+    """
+    Base model for ToO requests
+    """
+
     filters: list[str] = Field(min_length=1)
     target_priority: float = Field(
-        default=MAX_TARGET_PRIORITY / 2.0,
-        title=f"Priority for target",
-        le=MAX_TARGET_PRIORITY,
+        default=50.0,
+        title="Priority for target",
+        ge=0.0,
     )
     t_exp: float = Field(
         default=get_default_value("visitExpTime"),
@@ -50,6 +56,14 @@ class ToORequest(BaseModel):
 
     @validator("end_time_mjd")
     def validate_field_pairs(cls, field_value, values, field):
+        """
+        Field validator to ensure that the end time is greater than the start time
+
+        :param field_value: value of the field
+        :param values: values of all fields
+        :param field: field name
+        :return: validated field value
+        """
         min_key = "start_time_mjd"
         start_time = values[min_key]
         if not field_value > start_time:
@@ -59,11 +73,15 @@ class ToORequest(BaseModel):
             )
         return field_value
 
-    class Config:
+    class Config:  # pylint: disable=missing-class-docstring,too-few-public-methods
         extra = Extra.forbid
 
 
 class ObsWithRaDec(BaseModel):
+    """
+    Base model for ToO requests with Ra/Dec
+    """
+
     ra_deg: float = Field(
         title="Right ascension in decimal degrees", ge=0.0, le=360.0, example=180.0
     )
@@ -77,6 +95,10 @@ class ObsWithRaDec(BaseModel):
 
 
 class ObsWithField(BaseModel):
+    """
+    Base model for ToO requests with field
+    """
+
     field_id: int = Field(title="Field ID", ge=1)
 
 
@@ -89,31 +111,35 @@ class FieldToO(ToORequest, ObsWithField):
 
 
 class FullTooRequest(ToORequest, ObsWithRaDec, ObsWithField):
-    pass
+    """Full ToO Request with field and Ra/Dec"""
 
 
 class Summer(ToORequest):
+    """Summer ToO Request"""
+
     filters: List[SummerFilters] = Field(default=SUMMER_FILTERS)
 
 
 class Winter(ToORequest):
+    """Winter ToO Request"""
+
     filters: list[WinterFilters] = WINTER_FILTERS
 
 
 class SummerFieldToO(Summer, FieldToO):
-    pass
+    """Summer ToO Request with field"""
 
 
 class SummerRaDecToO(Summer, RaDecToO):
-    pass
+    """Summer ToO Request with Ra/Dec"""
 
 
 class WinterFieldToO(Winter, FieldToO):
-    pass
+    """Winter ToO Request with field"""
 
 
 class WinterRaDecToO(Winter, RaDecToO):
-    pass
+    """Winter ToO Request with Ra/Dec"""
 
 
-ALL_TOO_CLASSES = Union[SummerFieldToO, SummerRaDecToO, WinterFieldToO, WinterRaDecToO]
+AllTooClasses = Union[SummerFieldToO, SummerRaDecToO, WinterFieldToO, WinterRaDecToO]

@@ -1,13 +1,15 @@
+"""
+Module for database functions
+"""
 import getpass
 
 import numpy as np
 import pandas as pd
 import psycopg
-from sqlalchemy import Select, create_engine
-# from wintertoo.models import Program
-from mirar.utils.sql import get_engine
+from sqlalchemy import create_engine
 
 from wintertoo.data import PROGRAM_DB_HOST
+
 
 #
 def get_engine(
@@ -16,24 +18,19 @@ def get_engine(
     db_host: str = "localhost",
     db_name: str = "summer",
 ):
+    """
+    Get engine for database
+
+    :param db_user: Database user
+    :param db_password: Database password
+    :param db_host: Database host
+    :param db_name: Database name
+    :return: Engine
+    """
     return create_engine(
         f"postgresql+psycopg://{db_user}:{db_password}" f"@{db_host}/{db_name}",
         future=True,
     )
-
-
-# def add_user(email: str, passhash: str):
-#     """
-#     Add a new user to the database
-#
-#     :param email: Email of user
-#     :param passhash: Hash of password (NOT PASSWORD ITSELF!!!)
-#     :return: None
-#     """
-#     with engine.connect() as conn:
-#         with conn.begin():
-#             stmt = Insert(Users).values(email=email, passhash=passhash)
-#             conn.execute(stmt)
 
 
 def get_program_details(  # pylint: disable=too-many-arguments
@@ -62,20 +59,6 @@ def get_program_details(  # pylint: disable=too-many-arguments
         program_db_password = getpass.getpass(
             f"Enter password for program_db_user {program_db_user}: "
         )
-
-    engine = get_engine(
-        db_user=program_db_user,
-        db_password=program_db_password,
-        db_host=program_db_host,
-        db_name=program_db_name,
-    )
-
-    # with engine.connect() as conn:
-    #     stmt = Select(ProgramTable).where(
-    #         ProgramTable.progname == program_name,
-    #         ProgramTable.prog_key == program_api_key,
-    #     )
-    #     data = pd.read_sql_query(sql=stmt, con=conn)
 
     with psycopg.connect(  # pylint: disable=not-context-manager
         f"dbname='{program_db_name}' user={program_db_user} "

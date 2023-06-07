@@ -4,14 +4,13 @@ Module for testing submission of a schedule
 import logging
 import os
 import unittest
+from datetime import date
 
 import pandas as pd
-from datetime import date
-from astropy.time import Time
 
+from wintertoo.models import Program, SummerRaDecToO
 from wintertoo.schedule import schedule_ra_dec
 from wintertoo.validate import validate_schedule_df
-from wintertoo.models import SummerRaDecToO, Program
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +54,7 @@ class TestSchedule(unittest.TestCase):
                 maxpriority=100,
                 startdate=date(2021, 1, 1),
                 enddate=date(2023, 12, 31),
-            )
+            ),
         )
         comp = pd.read_json(schedule.to_json())  # pylint: disable=no-member
-        comp.to_json(test_json_path)
         self.assertEqual(test_df.to_json(), comp.to_json())  # pylint: disable=no-member
