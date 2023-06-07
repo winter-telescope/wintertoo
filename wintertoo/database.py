@@ -13,7 +13,7 @@ from wintertoo.data import PROGRAM_DB_HOST
 
 #
 def get_engine(
-    db_user: str = None,  # FIXME create read-only user
+    db_user: str = None,
     db_password: str = None,
     db_host: str = "localhost",
     db_name: str = "summer",

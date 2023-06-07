@@ -55,6 +55,7 @@ class ToORequest(BaseModel):
     )
 
     @validator("end_time_mjd")
+    @classmethod
     def validate_field_pairs(cls, field_value, values, field):
         """
         Field validator to ensure that the end time is greater than the start time
