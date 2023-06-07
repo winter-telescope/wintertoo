@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wintertoo"
-version = "0.3.3"
+version = "0.3.4"
 description = ""
 authors = [
     "Danielle Frostig <frostig@mit.edu>",
@@ -8,6 +8,7 @@ authors = [
     "Robert Stein <rdstein@caltech.edu>"
 ]
 readme = "README.md"
+homepage = "https://github.com/winter-telescope/wintertoo"
 
 [tool.poetry.dependencies]
 python = ">=3.9.0,<3.12"
