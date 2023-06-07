@@ -9,43 +9,99 @@ import pandas as pd
 from astropy.coordinates import SkyCoord
 from matplotlib.axes import Axes
 
-from wintertoo.data import summer_fields
+from wintertoo.data import (
+    SUMMER_BASE_WIDTH,
+    WINTER_BASE_WIDTH,
+    summer_fields,
+    winter_fields,
+)
 
 logger = logging.getLogger(__name__)
 
-BASE_SUMMER_WIDTH_DEG = 0.25
 
-
-def get_summer_fields_in_box(ra_lim: tuple, dec_lim: tuple) -> pd.DataFrame:
+def get_fields(summer: bool = False) -> pd.DataFrame:
     """
-    Return all SUMMER fields within a particular rectangle
+    Get field table for either summer or winter
+    :param summer: boolean whether to use summer grid
+    :return: field dataframe
+    """
+    if summer:
+        field_df = summer_fields
+    else:
+        field_df = winter_fields
+    return field_df
 
+
+def get_base_width(summer: bool = False) -> float:
+    """
+    Get base width of field
+    :param summer: boolean whether to use summer (or winter)
+    :return: width in deg
+    """
+    return SUMMER_BASE_WIDTH if summer else WINTER_BASE_WIDTH
+
+
+def get_field_info(field_id: int, summer: bool = False) -> pd.Series:
+    """
+    Get info from field table for a particular field ID
+    :param field_id: ID of field
+    :param summer: boolean whether to use summer field table
+    :return: Series for matching field
+    """
+
+    field_df = get_fields(summer=summer)
+
+    field_mask = field_df["#ID"].to_numpy(dtype=int) == field_id
+    if np.sum(field_mask) == 0:
+        err = f"Could not find field {field_id}"
+        logger.error(err)
+        raise KeyError(err)
+
+    assert np.sum(field_mask) == 1
+
+    return field_df.copy()[field_mask]
+
+
+def get_fields_in_box(
+    ra_lim: tuple, dec_lim: tuple, summer: bool = False
+) -> pd.DataFrame:
+    """
+    Return all fields within a particular rectangle
     :param ra_lim: tuple of lower, upper RA values
     :param dec_lim: tuple of lower, upper dec values
+    :param summer: boolean to use SUMMER grid rather than WINTER
     :return: dataframe of fields within the rectangle
     """
-    res = summer_fields.query(
+
+    field_df = get_fields(summer=summer)
+
+    res = field_df.query(
         f"(RA > {ra_lim[0]}) and (RA < {ra_lim[1]}) "
         f"and (Dec > {dec_lim[0]}) and (Dec < {dec_lim[1]})"
     )
     return res
 
 
-def get_overlapping_summer_fields(ra_deg: float, dec_deg: float) -> pd.DataFrame:
+def get_overlapping_fields(
+    ra_deg: float, dec_deg: float, summer: bool = False
+) -> pd.DataFrame:
     """
-    Get all SUMMER fields overlapping a particular RA/dec
-
+    Get all fields overlapping a particular RA/dec
     :param ra_deg: Ra
     :param dec_deg: dec
-    :return: dataframe of overlaping fields
+    :param summer: boolean whether to use summer field grid
+    :return: dataframe of overlapping fields
     """
-    summer_width = BASE_SUMMER_WIDTH_DEG / np.cos(np.radians(dec_deg))
 
-    res = summer_fields.query(
-        f"(RA > {ra_deg - 0.5 * summer_width}) and "
-        f"(RA < {ra_deg + 0.5 * summer_width}) and "
-        f"(Dec > {dec_deg - 0.5 * summer_width}) and "
-        f"(Dec < {dec_deg + 0.5 * summer_width})"
+    width = get_base_width(summer=summer) / np.cos(np.radians(dec_deg))
+
+    field_df = get_fields(summer=summer)
+
+    res = field_df.query(
+        f"(RA > {ra_deg - 0.5 * width}) and "
+        f"(RA < {ra_deg + 0.5 * width}) and "
+        f"(Dec > {dec_deg - 0.5 * width}) and "
+        f"(Dec < {dec_deg + 0.5 * width})"
     )
 
     logger.info(f"Found {len(res)} overlapping fields.")
@@ -53,17 +109,72 @@ def get_overlapping_summer_fields(ra_deg: float, dec_deg: float) -> pd.DataFrame
     return res
 
 
-def get_best_summer_field(ra_deg, dec_deg, make_plot: bool = False) -> pd.Series:
+def plot_field_rectangles(
+    ax: Axes, field_df: pd.DataFrame, color: str = "k", summer: bool = False
+):
+    """
+    Function to plot field contours
+    :param ax: axis
+    :param field_df: dataframe of fields
+    :param color: color for the field edge color
+    :param summer: Boolean whether to use summer field grid
+    :return: None
+    """
+
+    base_width = get_base_width(summer=summer)
+
+    for _, row in field_df.iterrows():
+        width_deg = base_width / np.cos(np.radians(row["Dec"]))
+        rectangle = plt.Rectangle(
+            (row["RA"] - 0.5 * width_deg, row["Dec"] - 0.5 * width_deg),
+            width_deg,
+            width_deg,
+            fc="none",
+            ec=color,
+        )
+        ax.add_patch(rectangle)
+
+
+def plot_overlapping_fields(
+    field_df: pd.DataFrame,
+    ra_deg: float,
+    dec_deg: float,
+    summer: bool = False,
+    closest: pd.DataFrame = None,
+) -> Axes:
+    """
+    Plot summer fields overlapping a given ra/dex
+    :param field_df: field dataframe
+    :param ra_deg: ra
+    :param dec_deg: dec
+    :param summer: boolean whether to use summer field grid
+    :param closest: the closest field
+    :return: ax
+    """
+    ax = plt.subplot(111)
+    plt.scatter(ra_deg, dec_deg, marker="*")
+
+    plot_field_rectangles(ax, field_df, summer=summer)
+
+    if closest is not None:
+        plot_field_rectangles(ax, closest, color="r")
+
+    return ax
+
+
+def get_best_field(
+    ra_deg, dec_deg, summer: bool = False, make_plot: bool = False
+) -> pd.Series:
     """
     Get the 'best' summer field for a given ra/dec,
     where best is defined as the field with a center closest to the value
-
     :param ra_deg: ra
     :param dec_deg: dec
+    :param summer: boolean whether to use summer field grid
     :param make_plot: make a plot of the overlap
     :return: best field
     """
-    res = get_overlapping_summer_fields(ra_deg, dec_deg)
+    res = get_overlapping_fields(ra_deg, dec_deg, summer=summer)
 
     sky_pos = SkyCoord(ra_deg, dec_deg, unit="deg")
 
@@ -81,37 +192,16 @@ def get_best_summer_field(ra_deg, dec_deg, make_plot: bool = False) -> pd.Series
     logger.info(f"Best is field {int(closest.iloc[0]['ID'])}")
 
     if make_plot:
-        plot_overlapping_summer_fields(res, ra_deg, dec_deg, closest)
+        plot_overlapping_fields(res, ra_deg, dec_deg, summer=summer, closest=closest)
 
     return closest.iloc[0]
 
 
-def plot_field_rectangles(ax: Axes, field_df: pd.DataFrame, color: str = "k"):
+def plot_fields(
+    field_df: pd.DataFrame, ra_lim: tuple, dec_lim: tuple, summer: bool = False
+) -> Axes:
     """
-    Function to plot field contours
-
-    :param ax: axis
-    :param field_df: dataframe of fields
-    :param color: color for the field edge color
-    :return: None
-    """
-
-    for _, row in field_df.iterrows():
-        summer_width_deg = BASE_SUMMER_WIDTH_DEG / np.cos(np.radians(row["Dec"]))
-        rectangle = plt.Rectangle(
-            (row["RA"] - 0.5 * summer_width_deg, row["Dec"] - 0.5 * summer_width_deg),
-            summer_width_deg,
-            summer_width_deg,
-            fc="none",
-            ec=color,
-        )
-        ax.add_patch(rectangle)
-
-
-def plot_summer_fields(field_df: pd.DataFrame, ra_lim: tuple, dec_lim: tuple) -> Axes:
-    """
-    Plot summer fields within a rectangle
-
+    Plot fields within a rectangle
     :param field_df: dataframe of fields
     :param ra_lim: tuple of lower, upper ra values
     :param dec_lim: tuple of lower, upper dec values
@@ -129,32 +219,6 @@ def plot_summer_fields(field_df: pd.DataFrame, ra_lim: tuple, dec_lim: tuple) ->
     )
     ax.add_patch(rectangle)
 
-    plot_field_rectangles(ax, field_df)
-
-    return ax
-
-
-def plot_overlapping_summer_fields(
-    field_df: pd.DataFrame,
-    ra_deg: float,
-    dec_deg: float,
-    closest: pd.DataFrame = None,
-) -> Axes:
-    """
-    Plot summer fields overlapping a given ra/dex
-
-    :param field_df: field dataframe
-    :param ra_deg: ra
-    :param dec_deg: dec
-    :param closest: closest field
-    :return:
-    """
-    ax = plt.subplot(111)
-    plt.scatter(ra_deg, dec_deg, marker="*")
-
-    plot_field_rectangles(ax, field_df)
-
-    if closest is not None:
-        plot_field_rectangles(ax, closest, color="r")
+    plot_field_rectangles(ax, field_df, summer=summer)
 
     return ax

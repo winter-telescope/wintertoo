@@ -1,30 +1,22 @@
 """
 Module for validating ToO requests
 """
-import getpass
 import json
 import logging
 
 import astropy.time
 import pandas as pd
-import psycopg
 from astropy import units as u
 from astropy.time import Time
-from jsonschema import ValidationError, validate
+from jsonschema import validate
 
-from wintertoo.data import (
-    MAX_TARGET_PRIORITY,
-    PROGRAM_DB_HOST,
-    SUMMER_FILTERS,
-    too_db_schedule_config,
-)
-from wintertoo.utils import get_program_details, up_tonight
+from wintertoo.data import PROGRAM_DB_HOST, SUMMER_FILTERS, too_db_schedule_config
+from wintertoo.database import get_program_details
+from wintertoo.errors import WinterCredentialsError, WinterValidationError
+from wintertoo.models import Program
+from wintertoo.utils import up_tonight
 
 logger = logging.getLogger(__name__)
-
-
-class RequestValidationError(Exception):
-    """Error relating to a request validation"""
 
 
 def get_and_validate_program_details(  # pylint: disable=too-many-arguments
@@ -34,10 +26,9 @@ def get_and_validate_program_details(  # pylint: disable=too-many-arguments
     program_db_password: str = None,
     program_db_host: str = PROGRAM_DB_HOST,
     program_db_name: str = "summer",
-) -> pd.DataFrame:
+) -> Program:
     """
     Get details of chosen program
-
     :param program_name: Name of program (e.g. 2020A001)
     :param program_api_key: program api key
     :param program_db_user: user of program database
@@ -57,42 +48,41 @@ def get_and_validate_program_details(  # pylint: disable=too-many-arguments
     )
 
     if len(data) == 0:
-        raise RequestValidationError(
+        raise WinterCredentialsError(
             f"Found no match in program database for combination of "
-            f"program={program_name} and api_key={program_api_key}"
+            f"program={program_name} and api_key"
         )
 
     if len(data) > 1:
-        raise RequestValidationError(
-            f"Found multiple matches in program database for {program_name}:"
+        raise WinterCredentialsError(
+            f"Found multiple matches in program database for combination of "
+            f"program={program_name} and api_key"
         )
 
-    return data.iloc[0]
+    return Program(**data.iloc[0].to_dict())
 
 
 def validate_schedule_json(data: dict):
     """
     Validates that a schedule json matches the ToO database schema.
     Returns nothing, but raises an error if needed.
-
     :param data: data to validate
     :return: None
     """
     try:
         validate(data, schema=too_db_schedule_config)
-        logger.info("Successfully validated schema")
-    except ValidationError as exc:
+        logger.debug("Successfully validated schema")
+    except WinterValidationError as exc:
         logger.error(
             "Error with JSON schema validation, input data not formatted correctly."
         )
         logger.error(exc)
-        raise RequestValidationError(exc) from exc
+        raise WinterValidationError(exc) from exc
 
 
 def validate_schedule_df(df: pd.DataFrame):
     """
     Validate a schedule dataframe
-
     :param df: dataframe
     :return: None
     """
@@ -105,7 +95,6 @@ def validate_target_visibility(schedule: pd.DataFrame):
     """
     Validate that requested targets in a schedule are visible.
     Returns nothing, but raises errors as required.
-
     :param schedule: Schedule to check
     :return: None
     """
@@ -124,34 +113,43 @@ def validate_target_visibility(schedule: pd.DataFrame):
                     f" {row}"
                 )
                 logger.error(err)
-                raise RequestValidationError(err)
+                raise WinterValidationError(err)
 
 
-def calculate_overall_priority(
-    target_priority: float, program_base_priority: float
-) -> float:
+def validate_obshist(schedule: pd.DataFrame):
     """
-    Calculate the overall priority for a target
+    Ensures that each entry in a schedule has a unique obsHistID, starting at 0.
 
-    :param target_priority: User-assigned priority
-    :param program_base_priority: Underlying program priority
-    :return: overall priority
+    :param schedule: Schedule to test
+    :return: None
     """
-    return target_priority + program_base_priority
+
+    unique_ids = set(schedule["obsHistID"].tolist())
+    if len(schedule) != len(unique_ids):
+        err = (
+            f"Each entry in schedule needs a unique 'obsHistID'. "
+            f"Here there are {len(unique_ids)} unique entries for "
+            f"{len(schedule)} entries."
+        )
+        logger.error(err)
+        raise WinterValidationError(err)
+    if min(unique_ids) != 0:
+        err = (
+            f"obsHistID values should start at zero. "
+            f"Instead the minimum value is {min(unique_ids)}."
+        )
+        logger.error(err)
+        raise WinterValidationError(err)
 
 
-def validate_target_priority(schedule: pd.DataFrame, program_base_priority: float):
+def validate_target_priority(schedule: pd.DataFrame, max_priority: float):
     """
     Validates the priority assigned to each target does not exceed
     the maximum allowed for the particular program. If not, raises an error.
-
     :param schedule: schedule to check
-    :param program_base_priority: base priority of program
+    :param max_priority: base priority of program
     :return: None.
     """
-    max_priority = calculate_overall_priority(
-        target_priority=MAX_TARGET_PRIORITY, program_base_priority=program_base_priority
-    )
 
     for _, row in schedule.iterrows():
         target_priority = float(row["priority"])
@@ -159,18 +157,15 @@ def validate_target_priority(schedule: pd.DataFrame, program_base_priority: floa
         if target_priority > max_priority:
             err = (
                 f"Target priority ({target_priority} exceeds maximum allowed value "
-                f"of {max_priority}. The maximum is the sum of the "
-                f"overall max target priority ({MAX_TARGET_PRIORITY}) "
-                f"and the program priority ({program_base_priority})."
+                f"of {max_priority}. "
             )
             logger.error(err)
-            raise RequestValidationError(err)
+            raise WinterValidationError(err)
 
 
 def validate_filter(filter_name: str):
     """
     Validates that the chosen filters are indeed SUMMER filters. Not case-sensitive.
-
     :param filter_name: name of filter
     :return:
     """
@@ -181,7 +176,6 @@ def validate_target_pi(schedule: pd.DataFrame, prog_pi: str):
     """
     Validate that the program PI matches recorded PI of program.
     Raises an error if not.
-
     :param schedule: Schedule to check
     :param prog_pi: true program PI
     :return: None.
@@ -189,9 +183,9 @@ def validate_target_pi(schedule: pd.DataFrame, prog_pi: str):
     for _, row in schedule.iterrows():
         pi = row["progPI"]
         if pi != prog_pi:
-            # err = f"Pi '{pi}' does not match database PI for program {row['progName']}"
-            # logger.error(err)
-            raise RequestValidationError()
+            err = f"Pi '{pi}' does not match database PI for program {row['progName']}"
+            logger.error(err)
+            raise WinterValidationError()
 
 
 def validate_target_dates(
@@ -204,7 +198,6 @@ def validate_target_dates(
     This includes that the program is still throughout,
     and that the start time is before the end time.
     Raises an error if not.
-
     :param schedule: Schedule to check
     :param program_start_date: start date of program
     :param program_end_date: end date of program
@@ -229,10 +222,10 @@ def validate_target_dates(
 
         if err is not None:
             logger.error(err)
-            raise RequestValidationError(err)
+            raise WinterValidationError(err)
 
 
-def validate_schedule_request(
+def validate_schedule_request(  # pylint: disable=too-many-arguments
     schedule_request: pd.DataFrame,
     program_name: str,
     program_api_key: str,
@@ -243,7 +236,6 @@ def validate_schedule_request(
     """
     Central to validate that a schedule request is allowed.
     Raises an error if not.
-
     :param schedule_request: Schedule to validate
     :param program_name: name of program e.g 2020A000
     :param program_api_key: unique API key for program
@@ -254,11 +246,13 @@ def validate_schedule_request(
     """
     validate_schedule_df(schedule_request)
     validate_target_visibility(schedule_request)
+    validate_obshist(schedule_request)
+
     prog_names = list(set(schedule_request["progName"]))
     assert len(prog_names) == 1
 
     # Check request using program info
-    programs_query_results = get_and_validate_program_details(
+    program = get_and_validate_program_details(
         program_name=program_name,
         program_api_key=program_api_key,
         program_db_user=program_db_user,
@@ -266,17 +260,15 @@ def validate_schedule_request(
         program_db_host=program_db_host,
     )
 
-    program_pi = programs_query_results["piname"].strip()
-    validate_target_pi(schedule_request, prog_pi=program_pi)
+    validate_target_pi(schedule_request, prog_pi=program.pi_name)
 
-    program_base_priority = programs_query_results["basepriority"]
     validate_target_priority(
-        schedule_request, program_base_priority=program_base_priority
+        schedule=schedule_request, max_priority=program.maxpriority
     )
 
-    program_start_date = Time(str(programs_query_results["startdate"]), format="isot")
+    program_start_date = Time(str(program.startdate), format="isot")
 
-    program_end_date = Time(str(programs_query_results["enddate"]), format="isot")
+    program_end_date = Time(str(program.enddate), format="isot")
 
     validate_target_dates(
         schedule_request,

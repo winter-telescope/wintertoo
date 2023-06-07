@@ -2,8 +2,9 @@
 Central module for general data and telescope constants
 """
 import json
-import os
+import typing
 from pathlib import Path
+from typing import Literal
 
 import astroplan
 import astropy.coordinates as coords
@@ -14,12 +15,17 @@ data_dir = Path(__file__).parent.resolve()
 summer_fields_path = data_dir.joinpath("summer_fields.txt")
 summer_fields = pd.read_csv(summer_fields_path, sep=r"\s+")
 
-SUMMER_FILTERS = ["u", "g", "r", "i"]
-WINTER_FILTERS = ["Y", "J", "Hs"]
+winter_fields_path = data_dir.joinpath("winter_fields.txt")
+winter_fields = pd.read_csv(winter_fields_path, sep=r"\s+")
 
-SUMMER_CAMERA_SIZE = 0.26112 / 2
+SummerFilters = Literal["u", "g", "r", "i"]
+WinterFilters = Literal["Y", "J", "Hs"]
 
-MAX_TARGET_PRIORITY = 100.0
+SUMMER_FILTERS = list(typing.get_args(SummerFilters))
+WINTER_FILTERS = list(typing.get_args(WinterFilters))
+
+SUMMER_BASE_WIDTH = 0.26112
+WINTER_BASE_WIDTH = 1.0
 
 PROGRAM_DB_HOST = "jagati.caltech.edu"
 

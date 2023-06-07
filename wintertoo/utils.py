@@ -2,81 +2,28 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Jan 25 13:51:59 2022
-
 @author: frostig, belatedly edited by Robert Stein
 """
-import getpass
 import logging
+from typing import Union
 
 import astropy.time
 import numpy as np
 import pandas as pd
-import psycopg
 from astropy.coordinates import AltAz, SkyCoord
 from astropy.time import Time
 
-from wintertoo.data import PALOMAR_LOC, PROGRAM_DB_HOST, palomar_observer
+from wintertoo.data import PALOMAR_LOC, palomar_observer
+from wintertoo.models.too import Summer, Winter
 
 logger = logging.getLogger(__name__)
 
 MINIMUM_ELEVATION = 20.0
 
 
-def get_program_details(  # pylint: disable=too-many-arguments
-    program_name: str,
-    program_api_key: str,
-    program_db_user: str = None,
-    program_db_password: str = None,
-    program_db_host: str = PROGRAM_DB_HOST,
-    program_db_name: str = "summer",
-) -> pd.DataFrame:
-    """
-    Get details of chosen program
-
-    :param program_name: Name of program (e.g. 2020A001)
-    :param program_api_key: program api key
-    :param program_db_user: user of program database
-    :param program_db_password: password of program database
-    :param program_db_host: host of program database
-    :param program_db_name: name of database containing program table
-    :return: dataframe of program
-    """
-
-    if program_db_user is None:
-        program_db_user = input("Enter program_db_user: ")
-
-    if program_db_password is None:
-        program_db_password = getpass.getpass(
-            f"Enter password for program_db_user {program_db_user}: "
-        )
-
-    with psycopg.connect(  # pylint: disable=not-context-manager
-        f"dbname='{program_db_name}' user={program_db_user} "
-        f"password={program_db_password} host={program_db_host}"
-    ) as conn:
-        command = (
-            f"SELECT * FROM programs "
-            f"WHERE programs.progname = '{program_name}' AND "
-            f"programs.prog_api_key = '{program_api_key}';"
-        )
-        with conn.execute(command) as cursor:
-            colnames = [desc[0] for desc in cursor.description]
-            data = cursor.fetchall()
-            data = pd.DataFrame(data, columns=colnames)
-
-    for col in ["startdate", "enddate"]:
-        data[col] = data[col].astype(str)
-
-    data.drop("id", inplace=True, axis=1)
-    data["prog_api_key"] = program_api_key
-
-    return data
-
-
 def get_alt_az(times_mjd: list, ra: float, dec: float) -> tuple:
     """
     Get alt and az for a target at various times in decimal degrees
-
     :param times_mjd: list of times
     :param ra: ra
     :param dec: dec
@@ -97,7 +44,6 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
     date in MJD (median Julian Date), e.g. 59480 (Sept 23)
     ra (right ascension) in hours, minutes, seconds, e.g. '+19h50m41s'
     dec (declination) in hours, minutes, seconds, e.g. '+08d50m58s'
-
     :param time_mjd: time in mjd
     :param ra: ra of target
     :param dec: dec of target
@@ -137,3 +83,30 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
         avail_bool = False
 
     return avail_bool, is_available
+
+
+def is_summer(too: Union[Winter, Summer]) -> bool:
+    """
+    Checks a ToO Request to ensure it is either a Summer or Winter request
+
+    :param too: ToO request
+    :return: boolean
+    """
+    if isinstance(too, Summer):
+        return True
+    if isinstance(too, Winter):
+        return False
+
+    err = f"Unrecognised ToO type {type(too)}"
+    logger.error(err)
+    raise TypeError(err)
+
+
+def get_date(time: Time) -> int:
+    """
+    Get the date from a time object
+
+    :param time: Time object
+    :return: date as an integer
+    """
+    return int(str(time).split(" ", maxsplit=1)[0])
