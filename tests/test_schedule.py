@@ -6,10 +6,12 @@ import os
 import unittest
 
 import pandas as pd
+from datetime import date
 from astropy.time import Time
 
 from wintertoo.schedule import schedule_ra_dec
 from wintertoo.validate import validate_schedule_df
+from wintertoo.models import SummerRaDecToO, Program
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +42,21 @@ class TestSchedule(unittest.TestCase):
         """
         logger.info("Testing schedule generation")
         schedule = schedule_ra_dec(
-            ra_deg=173.7056754,
-            dec_deg=11.253441,
-            pi="Stein",
-            program_name="2021A000",
-            program_id=1,
-            start_time=Time(59721.1894969287, format="mjd"),
-            end_time=Time(59722.1894969452, format="mjd"),
+            too=SummerRaDecToO(
+                ra_deg=173.7056754,
+                dec_deg=11.253441,
+                start_time_mjd=69721.1894969287,
+                end_time_mjd=69722.1894969452,
+            ),
+            program=Program(
+                pi_name="Stein",
+                progname="2021A000",
+                prog_key="763244309190298696786072636901190268976229595667748695826878",
+                maxpriority=100,
+                startdate=date(2021, 1, 1),
+                enddate=date(2023, 12, 31),
+            )
         )
         comp = pd.read_json(schedule.to_json())  # pylint: disable=no-member
+        comp.to_json(test_json_path)
         self.assertEqual(test_df.to_json(), comp.to_json())  # pylint: disable=no-member

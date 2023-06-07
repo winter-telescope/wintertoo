@@ -5,11 +5,11 @@ import logging
 from typing import Union
 
 import pandas as pd
+from wintertoo.models import Program
 
 from wintertoo.data import get_default_value
 from wintertoo.errors import WinterValidationError
 from wintertoo.fields import get_best_field, get_field_info
-from wintertoo.models import Program
 from wintertoo.models.too import (
     ALL_TOO_CLASSES,
     FullTooRequest,
@@ -19,7 +19,7 @@ from wintertoo.models.too import (
     WinterRaDecToO,
 )
 from wintertoo.utils import is_summer
-from wintertoo.validate import calculate_overall_priority, validate_schedule_df
+from wintertoo.validate import validate_schedule_df
 
 logger = logging.getLogger(__name__)
 
@@ -44,10 +44,6 @@ def make_schedule(
     all_entries = []
 
     for too in too:
-        priority = calculate_overall_priority(
-            target_priority=too.target_priority,
-            program_base_priority=program.basepriority,
-        )
 
         for filter_name in too.filters:
             for _ in range(too.n_exp):
@@ -57,8 +53,8 @@ def make_schedule(
                     "fieldID": too.field_id,
                     "filter": filter_name,
                     "visitExpTime": too.t_exp,
-                    "priority": priority,
-                    "progPI": program.piname,
+                    "priority": too.target_priority,
+                    "progPI": program.pi_name,
                     "progName": program.progname,
                     "progID": program.progid,
                     "validStart": too.start_time_mjd,
@@ -122,7 +118,7 @@ def schedule_ra_dec(
         best_field = get_best_field(too.ra_deg, too.dec_deg, summer=is_summer(too))
         too.ra_deg = best_field["RA"]
         too.dec_deg = best_field["Dec"]
-        field_id = best_field["#ID"]
+        field_id = best_field["ID"]
     else:
         field_id = get_default_value("fieldID")
 

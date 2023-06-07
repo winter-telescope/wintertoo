@@ -8,7 +8,8 @@ import astropy.time
 import pandas as pd
 from astropy import units as u
 from astropy.time import Time
-from jsonschema import ValidationError, validate
+from jsonschema import validate
+from wintertoo.models import Program
 
 from wintertoo.data import (
     MAX_TARGET_PRIORITY,
@@ -18,7 +19,6 @@ from wintertoo.data import (
 )
 from wintertoo.database import get_program_details
 from wintertoo.errors import WinterCredentialsError, WinterValidationError
-from wintertoo.models import Program
 from wintertoo.utils import up_tonight
 
 logger = logging.getLogger(__name__)
@@ -147,29 +147,14 @@ def validate_obshist(schedule: pd.DataFrame):
         raise WinterValidationError(err)
 
 
-def calculate_overall_priority(
-    target_priority: float, program_base_priority: float
-) -> float:
-    """
-    Calculate the overall priority for a target
-    :param target_priority: User-assigned priority
-    :param program_base_priority: Underlying program priority
-    :return: overall priority
-    """
-    return target_priority + program_base_priority
-
-
-def validate_target_priority(schedule: pd.DataFrame, program_base_priority: float):
+def validate_target_priority(schedule: pd.DataFrame, max_priority: float):
     """
     Validates the priority assigned to each target does not exceed
     the maximum allowed for the particular program. If not, raises an error.
     :param schedule: schedule to check
-    :param program_base_priority: base priority of program
+    :param max_priority: base priority of program
     :return: None.
     """
-    max_priority = calculate_overall_priority(
-        target_priority=MAX_TARGET_PRIORITY, program_base_priority=program_base_priority
-    )
 
     for _, row in schedule.iterrows():
         target_priority = float(row["priority"])
@@ -179,7 +164,7 @@ def validate_target_priority(schedule: pd.DataFrame, program_base_priority: floa
                 f"Target priority ({target_priority} exceeds maximum allowed value "
                 f"of {max_priority}. The maximum is the sum of the "
                 f"overall max target priority ({MAX_TARGET_PRIORITY}) "
-                f"and the program priority ({program_base_priority})."
+                f"and the program priority ({max_priority})."
             )
             logger.error(err)
             raise WinterValidationError(err)
@@ -282,11 +267,9 @@ def validate_schedule_request(  # pylint: disable=too-many-arguments
         program_db_host=program_db_host,
     )
 
-    validate_target_pi(schedule_request, prog_pi=program.piname)
+    validate_target_pi(schedule_request, prog_pi=program.pi_name)
 
-    validate_target_priority(
-        schedule_request, program_base_priority=program.basepriority
-    )
+    validate_target_priority(schedule=schedule_request, max_priority=program.maxpriority)
 
     program_start_date = Time(str(program.startdate), format="isot")
 
