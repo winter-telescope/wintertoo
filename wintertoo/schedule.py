@@ -25,21 +25,18 @@ logger = logging.getLogger(__name__)
 
 
 def make_schedule(
-    toos: Union[FullTooRequest | list[FullTooRequest]],
+    toos: list[FullTooRequest],
     program: Program,
     csv_save_file: str = None,
 ) -> pd.DataFrame:
     """
     Function to build a combined ToO request for several requests.
 
-    :param too: A ToO request, or list of ToO requests
+    :param toos: A list of ToO requests
     :param program: program details
     :param csv_save_file: optional path to export log as csv
     :return: schedule dataframe
     """
-
-    if not isinstance(toos, list):
-        toos = [toos]
 
     all_entries = []
 
@@ -93,7 +90,7 @@ def build_schedule_list(
     :return: a schedule dataframe
     """
     schedule = make_schedule(
-        toos=too,
+        toos=[too],
         program=program,
         csv_save_file=csv_save_file,
     )
@@ -124,7 +121,7 @@ def schedule_ra_dec(
     full_request = FullTooRequest(field_id=field_id, **too.dict())
 
     schedule = make_schedule(
-        toos=full_request,
+        toos=[full_request],
         program=program,
         csv_save_file=csv_save_file,
     )
@@ -155,7 +152,7 @@ def schedule_field(
     full_request = FullTooRequest(ra_deg=ra_deg, dec_deg=dec_deg, **too.dict())
 
     schedule = make_schedule(
-        toos=full_request,
+        toos=[full_request],
         program=program,
         csv_save_file=csv_save_file,
     )
