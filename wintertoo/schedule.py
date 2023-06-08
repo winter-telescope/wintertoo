@@ -146,8 +146,8 @@ def schedule_field(
     summer_bool = is_summer(too)
 
     field_details = get_field_info(field_id=too.field_id, summer=summer_bool)
-    ra_deg = float(field_details["RA"])
-    dec_deg = float(field_details["Dec"])
+    ra_deg = float(field_details["RA"].iloc[0])
+    dec_deg = float(field_details["Dec"].iloc[0])
 
     full_request = FullTooRequest(ra_deg=ra_deg, dec_deg=dec_deg, **too.dict())
 
