@@ -109,4 +109,4 @@ def get_date(time: Time) -> int:
     :param time: Time object
     :return: date as an integer
     """
-    return int(str(time).split(" ", maxsplit=1)[0])
+    return int(str(time).split(" ", maxsplit=1)[0].replace("-", ""))
