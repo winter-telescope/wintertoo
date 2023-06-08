@@ -28,6 +28,7 @@ psycopg-binary = ">=3.1.8"
 sqlalchemy = ">=2.0.4"
 pydantic = ">=1.10.5"
 pre-commit = ">=3.2.2"
+bcrypt = "^4.0.1"
 
 [tool.isort]
 profile = "black"

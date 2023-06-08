@@ -2,13 +2,16 @@
 Module for database functions
 """
 import getpass
+import secrets
 
+import bcrypt
 import numpy as np
 import pandas as pd
 import psycopg
 from sqlalchemy import create_engine
 
 from wintertoo.data import PROGRAM_DB_HOST
+from wintertoo.errors import WinterCredentialsError
 
 
 #
@@ -33,7 +36,7 @@ def get_engine(
     )
 
 
-def get_program_details(  # pylint: disable=too-many-arguments
+def get_program_details(  # pylint: disable=too-many-arguments,too-many-locals
     program_name: str,
     program_api_key: str,
     program_db_user: str = None,
@@ -67,17 +70,37 @@ def get_program_details(  # pylint: disable=too-many-arguments
         conn.read_only = True
         with conn.execute("SELECT * FROM programs") as cursor:
             colnames = [desc[0] for desc in cursor.description]
-            data = cursor.fetchall()
-            data = pd.DataFrame(data, columns=colnames)
+            data = pd.DataFrame(cursor.fetchall(), columns=colnames)
 
-    mask = np.logical_and(
-        data["prog_api_key"] == program_api_key, data["progname"] == program_name
-    )
-    data = data[mask]
+    name_match = []
+
+    for name in data["progname"]:
+        name_match.append(int(secrets.compare_digest(name, program_name)))
+
+    key_match = []
+
+    for hashed in data["prog_key"]:
+        try:
+            key_match.append(
+                int(
+                    bcrypt.checkpw(
+                        program_api_key.encode("utf-8"), hashed.encode("utf-8")
+                    )
+                )
+            )
+        except ValueError:
+            key_match.append(0)
+
+    mask = np.array(name_match) & np.array(key_match)
+
+    if np.sum(mask) == 0:
+        raise WinterCredentialsError("Program credentials not found in database")
+
+    data = data.iloc[mask.astype(bool)]
+
+    assert np.sum(mask) == 1, "Found multiple matches in database"
 
     for col in ["startdate", "enddate"]:
         data[col] = data[col].astype(str)
-
-    data.drop("id", inplace=True, axis=1)
 
     return data

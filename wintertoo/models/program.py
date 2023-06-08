@@ -8,8 +8,6 @@ from datetime import date
 
 from pydantic import BaseModel, Extra, Field, validator
 
-_LEN_PROG_KEY = 60
-
 
 class ProgramCredentials(BaseModel):
     """
@@ -17,7 +15,7 @@ class ProgramCredentials(BaseModel):
     """
 
     progname: str = Field(min_length=8, max_length=8, example="2020A000")
-    prog_key: str = Field(min_length=_LEN_PROG_KEY, max_length=_LEN_PROG_KEY)
+    prog_key: str = Field()
 
 
 class Program(ProgramCredentials):
@@ -25,6 +23,7 @@ class Program(ProgramCredentials):
     A pydantic model for a program database entry
     """
 
+    puid: int = Field(default=None)
     progid: int = Field(default=1)
     pi_name: str = Field(min_length=1, example="Hubble", default=None)
     pi_email: str = Field(min_length=1, example="someone@institute.com", default=None)
