@@ -51,7 +51,7 @@ def get_field_info(field_id: int, summer: bool = False) -> pd.Series:
 
     field_df = get_fields(summer=summer)
 
-    field_mask = field_df["#ID"].to_numpy(dtype=int) == field_id
+    field_mask = field_df["ID"].to_numpy(dtype=int) == field_id
     if np.sum(field_mask) == 0:
         err = f"Could not find field {field_id}"
         logger.error(err)
