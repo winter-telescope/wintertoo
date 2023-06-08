@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wintertoo"
-version = "0.3.4"
+version = "0.3.5"
 description = ""
 authors = [
     "Danielle Frostig <frostig@mit.edu>",
