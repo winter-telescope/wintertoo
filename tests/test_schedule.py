@@ -58,3 +58,22 @@ class TestSchedule(unittest.TestCase):
         )
         comp = pd.read_json(schedule.to_json())  # pylint: disable=no-member
         self.assertEqual(test_df.to_json(), comp.to_json())  # pylint: disable=no-member
+
+        schedule = schedule_ra_dec(
+            too=SummerRaDecToO(
+                ra_deg=173.7056754,
+                dec_deg=11.253441,
+            ),
+            program=Program(
+                pi_name="Stein",
+                progname="2021A000",
+                prog_key="763244309190298696786072636901190268976229595667748695826878",
+                maxpriority=100,
+                startdate=date(2021, 1, 1),
+                enddate=date(2023, 12, 31),
+            ),
+        )
+
+        print(schedule)
+
+        validate_schedule_df(schedule)
