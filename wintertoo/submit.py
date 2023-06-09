@@ -40,6 +40,7 @@ def submit_schedule(  # pylint: disable=too-many-arguments
     schedule: pd.DataFrame,
     program_api_key: str,
     program_name: str,
+    program_db_name: str,
     program_db_host: str,
     program_db_user: str,
     program_db_password: str,
@@ -52,6 +53,7 @@ def submit_schedule(  # pylint: disable=too-many-arguments
     :param schedule: schedule to use
     :param program_api_key: API key of program
     :param program_name: Program name (e.g 2020A000)
+    :param program_db_name: Name of program DB
     :param program_db_host: Host of programs DB
     :param program_db_user: User of programs DB
     :param program_db_password: password of programs DB
@@ -63,6 +65,7 @@ def submit_schedule(  # pylint: disable=too-many-arguments
         schedule,
         program_api_key=program_api_key,
         program_name=program_name,
+        program_db_name=program_db_name,
         program_db_user=program_db_user,
         program_db_password=program_db_password,
         program_db_host=program_db_host,
