@@ -37,7 +37,6 @@ def get_and_validate_program_details(  # pylint: disable=too-many-arguments
     :param program_db_name: name of database containing program table
     :return: dataframe of program
     """
-
     data = get_program_details(
         program_name=program_name,
         program_api_key=program_api_key,
@@ -229,6 +228,7 @@ def validate_schedule_request(  # pylint: disable=too-many-arguments
     schedule_request: pd.DataFrame,
     program_name: str,
     program_api_key: str,
+    program_db_name: str,
     program_db_user: str = None,
     program_db_password: str = None,
     program_db_host: str = PROGRAM_DB_HOST,
@@ -239,6 +239,7 @@ def validate_schedule_request(  # pylint: disable=too-many-arguments
     :param schedule_request: Schedule to validate
     :param program_name: name of program e.g 2020A000
     :param program_api_key: unique API key for program
+    :param program_db_name: name of the programs database
     :param program_db_user:  user for the programs database
     :param program_db_password: password for the programs database
     :param program_db_host: host of the programs database
@@ -255,6 +256,7 @@ def validate_schedule_request(  # pylint: disable=too-many-arguments
     program = get_and_validate_program_details(
         program_name=program_name,
         program_api_key=program_api_key,
+        program_db_name=program_db_name,
         program_db_user=program_db_user,
         program_db_password=program_db_password,
         program_db_host=program_db_host,
