@@ -28,31 +28,29 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install poetry
-        run: pipx install poetry
-
       # Set up the python versions
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "poetry"
+          cache: 'pip'
+          cache-dependency-path: pyproject.toml
 
       - name: install packages
         run: |
-          poetry install
+          pip install --editable ".[dev]"
 
       # Runs a set of commands using the runners shell
       - name: Test the code
         run: |
-          poetry run coverage run -m unittest discover tests/
+          coverage run -m unittest discover tests/
 
       - name: Run Coveralls
         env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ success() }}
-        run: poetry run coveralls
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            coveralls --service=github
+
 
       - name: Echo tag name
         run: echo "Tag is ${{ github.ref }}, Tagged is ${{ startsWith(github.ref, 'refs/tags/')}}, Python Check is ${{matrix.python-version == 3.9}},  Deploy is ${{ startsWith(github.ref, 'refs/tags/') && matrix.python-version == 3.9}}"

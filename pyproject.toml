@@ -1,34 +1,91 @@
-[tool.poetry]
+[build-system]
+requires = ["setuptools>=45", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
 name = "wintertoo"
 version = "0.3.7"
 description = ""
 authors = [
-    "Danielle Frostig <frostig@mit.edu>",
-    "Viraj Karambelkar <viraj@astro.caltech.edu>",
-    "Robert Stein <rdstein@caltech.edu>"
+    {name = "Robert Stein", email = "rdstein@caltech.edu"},
+    {name = "Danielle Frostig", email = "frostig@mit.edu"},
+    {name = "Viraj Karambelkar", email = "viraj@astro.caltech.edu"}
 ]
+license = {text = "MIT"}
 readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Intended Audience :: Science/Research',
+    'Intended Audience :: End Users/Desktop',
+    'Intended Audience :: Developers',
+    'Natural Language :: English',
+    'Topic :: Scientific/Engineering',
+    'Topic :: Scientific/Engineering :: Astronomy',
+    'Topic :: Scientific/Engineering :: Physics',
+    'Operating System :: POSIX',
+    'Operating System :: Unix',
+    'Operating System :: MacOS',
+]
+dependencies = [
+    "pandas >= 2.0.0",
+    "astropy",
+    "astroplan",
+    "matplotlib",
+    "numpy",
+    "pytz",
+    "jsonschema",
+    "sqlalchemy",
+    "pydantic",
+    "pre-commit",
+    "bcrypt",
+    "psycopg",
+    "psycopg-binary"
+]
+[project.optional-dependencies]
+dev = [
+    "black == 23.3.0",
+    "isort == 5.12.0",
+    "pylint == 2.17.4",
+    "coveralls",
+]
+
+[project.urls]
 homepage = "https://github.com/winter-telescope/wintertoo"
 
-[tool.poetry.dependencies]
-python = ">=3.9.0,<3.12"
-pandas = ">=2.0.2"
-astropy = ">=5.2.1"
-astroplan = ">=0.8"
-matplotlib = ">=3.7.0"
-numpy = ">=1.24.2"
-pytz = ">=2022.7.1"
-psycopg = ">=3.1.8"
-black = "^23.1.0"
-isort = "^5.12.0"
-pylint = "^2.16.2"
-coveralls = ">=3.3.1"
-jsonschema = ">=4.17.3"
-psycopg-binary = ">=3.1.8"
-sqlalchemy = ">=2.0.4"
-pydantic = ">=1.10.5"
-pre-commit = ">=3.2.2"
-bcrypt = "^4.0.1"
+[tool.setuptools]
+packages = ["wintertoo", "wintertoo.models", "wintertoo.data"]
+
+[tool.coverage.run]
+source = ["wintertoo"]
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "raise KeyError",
+    "except KeyError",
+    "raise ValueError",
+    "except JSONDecodeError:",
+    "raise requests.exceptions.RequestException",
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if False:",
+    'if __name__ == "__main__":',
+    "err =",
+    "logger.error",
+    "raise"
+    ]
+ignore_errors = true
 
 [tool.isort]
 profile = "black"
@@ -39,7 +96,3 @@ disable=["logging-fstring-interpolation"]
 good-names=["ax", "ra", "df", "pi", "i"]
 exclude-too-few-public-methods=["pydantic.*"]
 extension-pkg-whitelist=["pydantic"]
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
