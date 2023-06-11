@@ -174,12 +174,12 @@ def concat_toos(
     schedule = []
 
     for too in requests:
-        if isinstance(too, Union[SummerFieldToO, WinterFieldToO]):
+        if isinstance(too, (SummerFieldToO, WinterFieldToO)):
             res = schedule_field(
                 too=too,
                 program=program,
             )
-        elif isinstance(too, Union[SummerRaDecToO, WinterRaDecToO]):
+        elif isinstance(too, (SummerRaDecToO, WinterRaDecToO)):
             res = schedule_ra_dec(
                 too=too,
                 program=program,
