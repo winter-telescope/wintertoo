@@ -54,7 +54,7 @@ dependencies = [
 homepage = "https://github.com/winter-telescope/wintertoo"
 
 [tool.setuptools]
-packages = ["wintertoo"]
+packages = ["wintertoo", "wintertoo.models", "wintertoo.data"]
 
 [tool.coverage.run]
 source = ["wintertoo"]
