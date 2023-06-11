@@ -11,6 +11,7 @@ from astropy.time import Time
 
 from wintertoo.models import Program, SummerRaDecToO
 from wintertoo.schedule import schedule_ra_dec
+from wintertoo.submit import export_schedule_to_sqlitedb
 from wintertoo.validate import (
     validate_obshist,
     validate_schedule_df,
@@ -96,3 +97,5 @@ class TestSchedule(unittest.TestCase):
             program_end_date=program_end_date,
         )
         validate_target_pi(schedule, prog_pi=program.pi_name)
+
+        export_schedule_to_sqlitedb(schedule, "test_schedule.db")
