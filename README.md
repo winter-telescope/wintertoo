@@ -9,3 +9,16 @@ Current functionality includes:
 * Converting RA/DEC positions to fields
 * Building ToO schedules
 * Verifying ToO schedules
+
+## Installation
+### Install from pypi
+```bash
+pip install wintertoo
+```
+
+### Install from source
+```bash
+git clone git@github.com:winter-telescope/wintertoo.git
+cd wintertoo
+pip install --editable ".[dev]"
+```
