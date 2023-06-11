@@ -7,12 +7,16 @@ import unittest
 from datetime import date
 
 import pandas as pd
+from astropy.time import Time
 
 from wintertoo.models import Program, SummerRaDecToO
 from wintertoo.schedule import schedule_ra_dec
 from wintertoo.validate import (
     validate_obshist,
     validate_schedule_df,
+    validate_target_dates,
+    validate_target_pi,
+    validate_target_priority,
     validate_target_visibility,
 )
 
@@ -44,6 +48,16 @@ class TestSchedule(unittest.TestCase):
         :return: None
         """
         logger.info("Testing schedule generation")
+
+        program = Program(
+            pi_name="Stein",
+            progname="2021A000",
+            prog_key="763244309190298696786072636901190268976229595667748695826878",
+            maxpriority=100,
+            startdate=date(2021, 1, 1),
+            enddate=date(2023, 12, 31),
+        )
+
         schedule = schedule_ra_dec(
             too=SummerRaDecToO(
                 ra_deg=173.7056754,
@@ -51,14 +65,7 @@ class TestSchedule(unittest.TestCase):
                 start_time_mjd=62721.1894969287,
                 end_time_mjd=62722.1894969452,
             ),
-            program=Program(
-                pi_name="Stein",
-                progname="2021A000",
-                prog_key="763244309190298696786072636901190268976229595667748695826878",
-                maxpriority=100,
-                startdate=date(2021, 1, 1),
-                enddate=date(2023, 12, 31),
-            ),
+            program=program,
         )
 
         validate_target_visibility(schedule)
@@ -71,15 +78,21 @@ class TestSchedule(unittest.TestCase):
                 ra_deg=173.7056754,
                 dec_deg=11.253441,
             ),
-            program=Program(
-                pi_name="Stein",
-                progname="2021A000",
-                prog_key="763244309190298696786072636901190268976229595667748695826878",
-                maxpriority=100,
-                startdate=date(2021, 1, 1),
-                enddate=date(2023, 12, 31),
-            ),
+            program=program,
         )
 
         validate_schedule_df(schedule)
         validate_obshist(schedule)
+
+        validate_target_priority(schedule=schedule, max_priority=program.maxpriority)
+
+        program_start_date = Time(str(program.startdate), format="isot")
+
+        program_end_date = Time(str(program.enddate), format="isot")
+
+        validate_target_dates(
+            schedule,
+            program_start_date=program_start_date,
+            program_end_date=program_end_date,
+        )
+        validate_target_pi(schedule, prog_pi=program.pi_name)
