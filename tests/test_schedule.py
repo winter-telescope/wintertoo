@@ -9,8 +9,8 @@ from datetime import date
 import pandas as pd
 from astropy.time import Time
 
-from wintertoo.models import Program, SummerRaDecToO
-from wintertoo.schedule import schedule_ra_dec
+from wintertoo.models import Program, SummerFieldToO, SummerRaDecToO
+from wintertoo.schedule import concat_toos, schedule_field, schedule_ra_dec
 from wintertoo.submit import export_schedule_to_sqlitedb
 from wintertoo.validate import (
     validate_obshist,
@@ -26,6 +26,15 @@ logger = logging.getLogger(__name__)
 test_data_dir = os.path.join(os.path.dirname(__file__), "testdata")
 test_json_path = os.path.join(test_data_dir, "test_schedule.json")
 test_df = pd.read_json(test_json_path)
+
+program = Program(
+    pi_name="Stein",
+    progname="2021A000",
+    prog_key="763244309190298696786072636901190268976229595667748695826878",
+    maxpriority=100,
+    startdate=date(2021, 1, 1),
+    enddate=date(2023, 12, 31),
+)
 
 
 class TestSchedule(unittest.TestCase):
@@ -49,15 +58,6 @@ class TestSchedule(unittest.TestCase):
         :return: None
         """
         logger.info("Testing schedule generation")
-
-        program = Program(
-            pi_name="Stein",
-            progname="2021A000",
-            prog_key="763244309190298696786072636901190268976229595667748695826878",
-            maxpriority=100,
-            startdate=date(2021, 1, 1),
-            enddate=date(2023, 12, 31),
-        )
 
         schedule = schedule_ra_dec(
             too=SummerRaDecToO(
@@ -99,3 +99,26 @@ class TestSchedule(unittest.TestCase):
         validate_target_pi(schedule, prog_pi=program.pi_name)
 
         export_schedule_to_sqlitedb(schedule, "test_schedule.db")
+
+    def test_schedule_utils(self):
+        """
+        Test generating a schedule
+
+        :return: None
+        """
+        logger.info("Testing schedule util functions")
+
+        field_too = SummerFieldToO(
+            field_id=1,
+        )
+
+        schedule_field(
+            field_too,
+            program=program,
+            csv_save_file="test_schedule.csv",
+        )
+
+        concat_toos(
+            [field_too, SummerRaDecToO(ra_deg=173.7056754, dec_deg=11.253441)],
+            program=program,
+        )
