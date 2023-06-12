@@ -21,4 +21,5 @@ pip install wintertoo
 git clone git@github.com:winter-telescope/wintertoo.git
 cd wintertoo
 pip install --editable ".[dev]"
+pre-commit install
 ```
