@@ -15,6 +15,9 @@ from wintertoo.data import (
 )
 from wintertoo.errors import WinterValidationError
 
+MIN_EXPOSURE_TIME = 0.28
+MAX_EXPOSURE_TIME = 300.0
+
 
 class ToORequest(BaseModel):
     """
@@ -29,9 +32,8 @@ class ToORequest(BaseModel):
     )
     t_exp: float = Field(
         default=get_default_value("visitExpTime"),
-        title="Individual exposure time (s)",
+        title="Combined Exposure Time across dithers (s)",
         ge=1.0,
-        le=300,
     )
     n_exp: int = Field(default=1, ge=1, title="Number of dither sets")
     n_dither: int = Field(
@@ -71,6 +73,35 @@ class ToORequest(BaseModel):
             raise WinterValidationError(
                 f"{field.name} ({field_value}) not "
                 f"greater than {min_key} ({start_time})"
+            )
+        return field_value
+
+    @validator("t_exp")
+    @classmethod
+    def validate_t_exp(cls, field_value, values, field):
+        """
+        Field validator to ensure that the exposure time is not too long
+
+        :param field_value: Total exposure time
+        :param values: Values of all fields
+        :param field: Field name
+        :return: Validated total exposure time per dither set
+        """
+        n_dither = values["n_dither"]
+        t_per_dither = field_value / n_dither
+
+        if t_per_dither > MAX_EXPOSURE_TIME:
+            raise WinterValidationError(
+                f"{field.name} ({field_value}) is too long for {n_dither} dithers. "
+                f"Max exposure time per dither is {MAX_EXPOSURE_TIME} s, "
+                f"while you have selected {t_per_dither} s per dither"
+            )
+
+        if t_per_dither < MIN_EXPOSURE_TIME:
+            raise WinterValidationError(
+                f"{field.name} ({field_value}) is too short for {n_dither} dithers. "
+                f"Min exposure time per dither is {MIN_EXPOSURE_TIME} s, "
+                f"while you have selected {t_per_dither} s per dither"
             )
         return field_value
 
