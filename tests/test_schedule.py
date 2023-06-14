@@ -69,6 +69,9 @@ class TestSchedule(unittest.TestCase):
             program=program,
         )
 
+        # Uncomment to generate a new test json
+        # schedule.to_json(test_json_path)
+
         validate_target_visibility(schedule)
 
         comp = pd.read_json(schedule.to_json())  # pylint: disable=no-member

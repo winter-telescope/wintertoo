@@ -15,7 +15,7 @@
     "observed": {"anyOf": [{"type":  "boolean", "default":  false}, {"type" : "integer", "minimum" : 0, "maximum" : 1}]},
     "maxAirmass": {"type":  "number", "comment": "Maximum airmass for observation", "default":  2.0},
     "ditherNumber": {"type": "integer", "default": 1},
-    "ditherStepSize": {"type": "number", "comment": "arcsec", "default": 15.0},
+    "ditherStepSize": {"type": "number", "comment": "arcsec", "default": 600.0},
     "fieldID": {"type": "integer", "default": 999999999},
     "targName": {"type": "string", "comment": "Target name e.g. GW170817"}
   },
