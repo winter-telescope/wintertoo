@@ -87,19 +87,19 @@ class ToORequest(BaseModel):
         :param field: Field name
         :return: Validated total exposure time per dither set
         """
-        n_dither = values["n_dither"]
-        t_per_dither = field_value / n_dither
+        n_dithers = values["n_dithers"]
+        t_per_dither = field_value / n_dithers
 
         if t_per_dither > MAX_EXPOSURE_TIME:
             raise WinterValidationError(
-                f"{field.name} ({field_value}) is too long for {n_dither} dithers. "
+                f"{field.name} ({field_value}) is too long for {n_dithers} dithers. "
                 f"Max exposure time per dither is {MAX_EXPOSURE_TIME} s, "
                 f"while you have selected {t_per_dither} s per dither"
             )
 
         if t_per_dither < MIN_EXPOSURE_TIME:
             raise WinterValidationError(
-                f"{field.name} ({field_value}) is too short for {n_dither} dithers. "
+                f"{field.name} ({field_value}) is too short for {n_dithers} dithers. "
                 f"Min exposure time per dither is {MIN_EXPOSURE_TIME} s, "
                 f"while you have selected {t_per_dither} s per dither"
             )
