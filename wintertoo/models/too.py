@@ -4,7 +4,7 @@ Models for ToO requests
 from typing import List, Optional, Union
 
 from astropy.time import Time
-from pydantic import BaseModel, Extra, Field, validator
+from pydantic import BaseModel, Extra, Field, root_validator, validator
 
 from wintertoo.data import (
     SUMMER_FILTERS,
@@ -76,34 +76,33 @@ class ToORequest(BaseModel):
             )
         return field_value
 
-    @validator("t_exp")
     @classmethod
-    def validate_t_exp(cls, field_value, values, field):
+    @root_validator
+    def validate_t_exp(cls, values):
         """
         Field validator to ensure that the exposure time is not too long
 
-        :param field_value: Total exposure time
         :param values: Values of all fields
-        :param field: Field name
         :return: Validated total exposure time per dither set
         """
-        n_dithers = values["n_dithers"]
-        t_per_dither = field_value / n_dithers
+        n_dithers = values["n_dither"]
+        t_exp = values["t_exp"]
+        t_per_dither = values["t_exp"] / n_dithers
 
         if t_per_dither > MAX_EXPOSURE_TIME:
             raise WinterValidationError(
-                f"{field.name} ({field_value}) is too long for {n_dithers} dithers. "
+                f"t_exp ({t_exp}) is too long for {n_dithers} dithers. "
                 f"Max exposure time per dither is {MAX_EXPOSURE_TIME} s, "
                 f"while you have selected {t_per_dither} s per dither"
             )
 
         if t_per_dither < MIN_EXPOSURE_TIME:
             raise WinterValidationError(
-                f"{field.name} ({field_value}) is too short for {n_dithers} dithers. "
+                f"t_exp ({t_exp}) is too short for {n_dithers} dithers. "
                 f"Min exposure time per dither is {MIN_EXPOSURE_TIME} s, "
                 f"while you have selected {t_per_dither} s per dither"
             )
-        return field_value
+        return values
 
     class Config:  # pylint: disable=missing-class-docstring,too-few-public-methods
         extra = Extra.forbid
