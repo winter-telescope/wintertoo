@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wintertoo"
-version = "0.3.9"
+version = "0.3.10"
 description = ""
 authors = [
     {name = "Robert Stein", email = "rdstein@caltech.edu"},
