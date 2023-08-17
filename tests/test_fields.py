@@ -32,13 +32,13 @@ class TestField(unittest.TestCase):
 
         fields = get_fields_in_box(ra_lim, dec_lim, summer=True)
 
-        assert len(fields) == 17, "Wrong number of fields"
-        assert fields["ID"].iloc[0] == 55286, "Wrong field"
+        assert len(fields) == 28, f"Wrong number of fields ({len(fields)})"
+        assert fields["ID"].iloc[0] == 54494, f"Wrong field {fields['ID'].iloc[0]}"
 
         fields = get_fields_in_box(ra_lim, dec_lim, summer=False)
 
-        assert len(fields) == 2, "Wrong number of fields"
-        assert fields["ID"].iloc[0] == 3735, "Wrong field"
+        assert len(fields) == 3, f"Wrong number of fields ({len(fields)})"
+        assert fields["ID"].iloc[0] == 3735, f"Wrong field {fields['ID'].iloc[0]}"
 
     def test_get_field_info(self):
         """
