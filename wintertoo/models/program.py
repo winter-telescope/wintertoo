@@ -6,7 +6,7 @@ an elaborate web of imports for WSP.
 """
 from datetime import date
 
-from pydantic import BaseModel, Extra, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, FieldValidationInfo, field_validator
 
 
 class ProgramCredentials(BaseModel):
@@ -23,7 +23,7 @@ class Program(ProgramCredentials):
     A pydantic model for a program database entry
     """
 
-    puid: int = Field(default=None)
+    puid: int | None = Field(default=None)
     progid: int = Field(default=1)
     pi_name: str = Field(min_length=1, example="Hubble", default=None)
     pi_email: str = Field(min_length=1, example="someone@institute.com", default=None)
@@ -34,31 +34,35 @@ class Program(ProgramCredentials):
     maxpriority: float = Field(description="Max priority")
     progtitle: str = Field(min_length=1, example="A program title", default=None)
 
-    @validator("enddate")
+    @field_validator("enddate")
     @classmethod
-    def check_date(cls, field_value, values):
+    def check_date(cls, enddate: date, info: FieldValidationInfo) -> date:
         """
         Ensure dates are correctly formatted
 
+        :param enddate: end date
+        :param info: field validation info
+        :return: end date
         """
-        startdate = values["startdate"]
-        assert field_value > startdate
-        return field_value
+        startdate = info.data["startdate"]
+        assert enddate > startdate
+        return enddate
 
-    @validator("hours_remaining")
+    @field_validator("hours_remaining")
     @classmethod
-    def validate_time_allocation(cls, field_value, values):
+    def validate_time_allocation(
+        cls, hours_remaining: float, info: FieldValidationInfo
+    ) -> float:
         """
         Ensure that time remaining has a sensible value
 
-        :param field_value: field value
-        :param values: values
+        :param hours_remaining: hours remaining
+        :param info: field validation info
         :return: field value
         """
-        total_time = values["hours_allocated"]
-        assert not field_value > total_time
-        assert not field_value < 0.0
-        return field_value
+        total_time = info.data["hours_allocated"]
+        assert not hours_remaining > total_time
+        assert not hours_remaining < 0.0
+        return hours_remaining
 
-    class Config:  # pylint: disable=missing-class-docstring,too-few-public-methods
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
