@@ -5,6 +5,7 @@ Duplicated (sorry) from mirar/pipelines/summer/models/program.py, to avoid
 an elaborate web of imports for WSP.
 """
 from datetime import date
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, FieldValidationInfo, field_validator
 
@@ -23,7 +24,7 @@ class Program(ProgramCredentials):
     A pydantic model for a program database entry
     """
 
-    puid: int | None = Field(default=None)
+    puid: Optional[int] = Field(default=None)
     progid: int = Field(default=1)
     pi_name: str = Field(min_length=1, example="Hubble", default=None)
     pi_email: str = Field(min_length=1, example="someone@institute.com", default=None)
