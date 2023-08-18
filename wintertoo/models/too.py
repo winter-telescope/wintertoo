@@ -4,7 +4,14 @@ Models for ToO requests
 from typing import List, Optional, Union
 
 from astropy.time import Time
-from pydantic import BaseModel, Extra, Field, root_validator, validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    FieldValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from wintertoo.data import (
     SUMMER_FILTERS,
@@ -56,38 +63,36 @@ class ToORequest(BaseModel):
         title="Allowed airmass range",
     )
 
-    @validator("end_time_mjd")
+    @field_validator("end_time_mjd")
     @classmethod
-    def validate_field_pairs(cls, field_value, values, field):
+    def validate_field_pairs(
+        cls, end_time_mjd: float, info: FieldValidationInfo
+    ) -> float:
         """
         Field validator to ensure that the end time is greater than the start time
 
-        :param field_value: value of the field
-        :param values: values of all fields
-        :param field: field name
+        :param end_time_mjd: field value
+        :param info: field validation info
         :return: validated field value
         """
-        min_key = "start_time_mjd"
-        start_time = values[min_key]
-        if not field_value > start_time:
+        start_time = info.data["start_time_mjd"]
+        if not end_time_mjd > start_time:
             raise WinterValidationError(
-                f"{field.name} ({field_value}) not "
-                f"greater than {min_key} ({start_time})"
+                f"end_time_mjd ({end_time_mjd}) not "
+                f"greater than start_time_mjd ({start_time})"
             )
-        return field_value
+        return end_time_mjd
 
-    @classmethod
-    @root_validator
-    def validate_t_exp(cls, values):
+    @model_validator(mode="after")
+    def validate_t_exp(self):
         """
         Field validator to ensure that the exposure time is not too long
 
-        :param values: Values of all fields
         :return: Validated total exposure time per dither set
         """
-        n_dithers = values["n_dither"]
-        t_exp = values["t_exp"]
-        t_per_dither = values["t_exp"] / n_dithers
+        n_dithers = self.n_dither
+        t_exp = self.t_exp
+        t_per_dither = t_exp / n_dithers
 
         if t_per_dither > MAX_EXPOSURE_TIME:
             raise WinterValidationError(
@@ -102,10 +107,8 @@ class ToORequest(BaseModel):
                 f"Min exposure time per dither is {MIN_EXPOSURE_TIME} s, "
                 f"while you have selected {t_per_dither} s per dither"
             )
-        return values
 
-    class Config:  # pylint: disable=missing-class-docstring,too-few-public-methods
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 
 class ObsWithRaDec(BaseModel):
