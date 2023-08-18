@@ -5,7 +5,7 @@ from typing import Literal
 
 from astropy import units as u
 from astropy.time import Time
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, FieldValidationInfo, field_validator
 
 from wintertoo.errors import WinterValidationError
 from wintertoo.models import ProgramCredentials
@@ -18,7 +18,7 @@ class BaseImageQuery(BaseModel):
     """
 
     program_list: list[ProgramCredentials] = Field(
-        title="List of programs to search for", min_items=1
+        title="List of programs to search for", min_length=1
     )
     start_date: int = Field(
         title="Start date for images",
@@ -50,24 +50,23 @@ class RectangleImageQuery(BaseImageQuery):
         title="Minimum dec (degrees)", ge=-90.0, le=90.0, default=90.0
     )
 
-    @validator("ra_max", "dec_max")
+    @field_validator("ra_max", "dec_max")
     @classmethod
-    def validate_field_pairs(cls, field_value, values, field):
+    def validate_field_pairs(cls, value: float, info: FieldValidationInfo) -> float:
         """
         Validate that the max value is greater than the min value
 
-        :param field_value: Value of the field
-        :param values: values of all fields
-        :param field: field name
+        :param value: field value
+        :param info: field validation info
         :return: validated field value
         """
-        min_key = field.name.replace("max", "min")
-        min_val = values[min_key]
-        if not field_value > min_val:
+        min_key = info.field_name.replace("max", "min")
+        min_val = info.data[min_key]
+        if not value > min_val:
             raise WinterValidationError(
-                f"{field.name} ({field_value}) not greater than {min_key} ({min_val})"
+                f"{info.field_name} ({value}) not greater than {min_key} ({min_val})"
             )
-        return field_value
+        return value
 
 
 class ConeImageQuery(BaseImageQuery):

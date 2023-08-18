@@ -74,10 +74,11 @@ def get_fields_in_box(
     """
 
     field_df = get_fields(summer=summer)
+    base_width = 0.5 * get_base_width(summer=summer)
 
     res = field_df.query(
-        f"(RA > {ra_lim[0]}) and (RA < {ra_lim[1]}) "
-        f"and (Dec > {dec_lim[0]}) and (Dec < {dec_lim[1]})"
+        f"(RA > {ra_lim[0] - base_width}) and (RA < {ra_lim[1] + base_width}) "
+        f"and (Dec > {dec_lim[0] - base_width}) and (Dec < {dec_lim[1] + base_width})"
     )
     return res
 

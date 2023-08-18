@@ -39,7 +39,7 @@ dependencies = [
     "pytz",
     "jsonschema",
     "sqlalchemy",
-    "pydantic",
+    "pydantic>=2.2.0",
     "pre-commit",
     "bcrypt",
     "psycopg",
@@ -47,9 +47,9 @@ dependencies = [
 ]
 [project.optional-dependencies]
 dev = [
-    "black == 23.3.0",
+    "black == 23.7.0",
     "isort == 5.12.0",
-    "pylint == 2.17.4",
+    "pylint == 2.17.5",
     "coveralls",
 ]
 
