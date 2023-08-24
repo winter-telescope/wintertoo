@@ -15,7 +15,7 @@ from pydantic import (
 
 from wintertoo.data import (
     SUMMER_FILTERS,
-    WINTER_FILTERS,
+    WINTER_SCIENCE_FILTERS,
     SummerFilters,
     WinterFilters,
     get_default_value,
@@ -157,7 +157,7 @@ class Summer(ToORequest):
 class Winter(ToORequest):
     """Winter ToO Request"""
 
-    filters: list[WinterFilters] = WINTER_FILTERS
+    filters: list[WinterFilters] = WINTER_SCIENCE_FILTERS
 
 
 class SummerFieldToO(Summer, FieldToO):
