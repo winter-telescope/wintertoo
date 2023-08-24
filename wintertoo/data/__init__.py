@@ -19,10 +19,12 @@ winter_fields_path = data_dir.joinpath("winter_fields.txt")
 winter_fields = pd.read_csv(winter_fields_path, sep=r"\s+")
 
 SummerFilters = Literal["u", "g", "r", "i"]
-WinterFilters = Literal["Y", "J", "Hs", "dark"]
+
+WinterFilters = Literal["dark", "Y", "J", "Hs"]
 
 SUMMER_FILTERS = list(typing.get_args(SummerFilters))
 WINTER_FILTERS = list(typing.get_args(WinterFilters))
+WINTER_SCIENCE_FILTERS = ["Y", "J", "Hs"]
 
 SUMMER_BASE_WIDTH = 0.26112
 WINTER_BASE_WIDTH = 1.0
