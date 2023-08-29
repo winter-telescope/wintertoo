@@ -64,7 +64,7 @@ class ToORequest(BaseModel):
     )
     target_name: Optional[str] = Field(
         title="Target name",
-        default=None,
+        default=get_default_value("targName"),
         examples=["SN2021abc", "GW170817_A", "IC191001A_1"],
     )
 
