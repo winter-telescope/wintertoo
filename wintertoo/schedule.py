@@ -59,6 +59,7 @@ def make_schedule(
                     "maxAirmass": too.max_airmass,
                     "ditherNumber": too.n_dither,
                     "ditherStepSize": too.dither_distance,
+                    "targName": too.target_name,
                 }
                 all_entries.append(new)
 

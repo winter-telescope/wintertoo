@@ -62,6 +62,11 @@ class ToORequest(BaseModel):
         le=5,
         title="Allowed airmass range",
     )
+    target_name: Optional[str] = Field(
+        title="Target name",
+        default=None,
+        examples=["SN2021abc", "GW170817_A", "IC191001A_1"],
+    )
 
     @field_validator("end_time_mjd")
     @classmethod
