@@ -17,7 +17,7 @@
     "ditherNumber": {"type": "integer", "default": 1},
     "ditherStepSize": {"type": "number", "comment": "arcsec", "default": 600.0},
     "fieldID": {"type": "integer", "default": 999999999},
-    "targName": {"type": "string", "comment": "Target name e.g. GW170817"}
+    "targName": {"type": ["string", "null"], "comment": "Target name e.g. GW170817", "default": null}
   },
   "required": [
     "obsHistID",
