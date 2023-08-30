@@ -59,7 +59,6 @@ def make_schedule(
                     "maxAirmass": too.max_airmass,
                     "ditherNumber": too.n_dither,
                     "ditherStepSize": too.dither_distance,
-                    "targName": too.target_name,
                 }
                 all_entries.append(new)
 
@@ -80,7 +79,7 @@ def build_schedule_list(
     too: FullTooRequest,
     program: Program,
     csv_save_file: str = None,
-):
+) -> pd.DataFrame:
     """
     Generate a full schedule request for single target,
     with all of RA, Dec and Field ID provided
@@ -119,7 +118,7 @@ def schedule_ra_dec(
     else:
         field_id = get_default_value("fieldID")
 
-    full_request = FullTooRequest(field_id=field_id, **too.dict())
+    full_request = FullTooRequest(field_id=field_id, **too.model_dump())
 
     schedule = make_schedule(
         toos=[full_request],
@@ -150,7 +149,7 @@ def schedule_field(
     ra_deg = float(field_details["RA"].iloc[0])
     dec_deg = float(field_details["Dec"].iloc[0])
 
-    full_request = FullTooRequest(ra_deg=ra_deg, dec_deg=dec_deg, **too.dict())
+    full_request = FullTooRequest(ra_deg=ra_deg, dec_deg=dec_deg, **too.model_dump())
 
     schedule = make_schedule(
         toos=[full_request],
@@ -186,7 +185,7 @@ def concat_toos(
                 program=program,
             )
         else:
-            err = f"Unrecognised type {type(too)}"
+            err = f"Unrecognised type {type(too)} for {too}"
             logger.error(err)
             raise WinterValidationError(err)
 

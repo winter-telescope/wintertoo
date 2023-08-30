@@ -62,11 +62,6 @@ class ToORequest(BaseModel):
         le=5,
         title="Allowed airmass range",
     )
-    target_name: Optional[str] = Field(
-        title="Target name",
-        default=get_default_value("targName"),
-        examples=["SN2021abc", "GW170817_A", "IC191001A_1"],
-    )
 
     @field_validator("end_time_mjd")
     @classmethod
@@ -112,6 +107,8 @@ class ToORequest(BaseModel):
                 f"Min exposure time per dither is {MIN_EXPOSURE_TIME} s, "
                 f"while you have selected {t_per_dither} s per dither"
             )
+
+        return self
 
     model_config = ConfigDict(extra="forbid")
 
