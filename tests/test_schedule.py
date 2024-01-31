@@ -33,7 +33,7 @@ program = Program(
     prog_key="763244309190298696786072636901190268976229595667748695826878",
     maxpriority=100,
     startdate=date(2021, 1, 1),
-    enddate=date(2023, 12, 31),
+    enddate=date(3023, 12, 31),
 )
 
 

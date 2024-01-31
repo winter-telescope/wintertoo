@@ -209,15 +209,21 @@ def validate_target_dates(
         err = None
 
         if start_time > stop_time:
-            err = f"Start time '{start_time}' is after stop time '{stop_time}'."
+            err = (
+                f"Start time '{start_time.isot}' is after stop time '{stop_time.isot}'."
+            )
 
         elif start_time < program_start_date:
             err = (
-                f"Start time '{start_time}' is before program start date '{stop_time}'"
+                f"Start time '{start_time.isot}' is before "
+                f"program start date '{program_start_date.isot}'"
             )
 
         elif stop_time > program_end_date:
-            err = f"Stop time '{start_time}' is after program end date '{stop_time}'"
+            err = (
+                f"Stop time '{start_time.isot}' is after "
+                f"program end date '{program_end_date.isot}'"
+            )
 
         if err is not None:
             logger.error(err)
@@ -236,6 +242,7 @@ def validate_schedule_request(  # pylint: disable=too-many-arguments
     """
     Central to validate that a schedule request is allowed.
     Raises an error if not.
+
     :param schedule_request: Schedule to validate
     :param program_name: name of program e.g 2020A000
     :param program_api_key: unique API key for program
