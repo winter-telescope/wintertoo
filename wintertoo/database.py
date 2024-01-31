@@ -1,6 +1,7 @@
 """
 Module for database functions
 """
+
 import getpass
 import secrets
 

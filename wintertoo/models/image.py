@@ -1,11 +1,12 @@
 """
 Base models for image queries
 """
+
 from typing import Literal
 
 from astropy import units as u
 from astropy.time import Time
-from pydantic import BaseModel, Field, FieldValidationInfo, field_validator
+from pydantic import BaseModel, Field, model_validator
 
 from wintertoo.errors import WinterValidationError
 from wintertoo.models import ProgramCredentials
@@ -50,23 +51,25 @@ class RectangleImageQuery(BaseImageQuery):
         title="Minimum dec (degrees)", ge=-90.0, le=90.0, default=90.0
     )
 
-    @field_validator("ra_max", "dec_max")
-    @classmethod
-    def validate_field_pairs(cls, value: float, info: FieldValidationInfo) -> float:
+    @model_validator(mode="after")
+    def validate_field_pairs(self):
         """
         Validate that the max value is greater than the min value
 
-        :param value: field value
-        :param info: field validation info
         :return: validated field value
         """
-        min_key = info.field_name.replace("max", "min")
-        min_val = info.data[min_key]
-        if not value > min_val:
-            raise WinterValidationError(
-                f"{info.field_name} ({value}) not greater than {min_key} ({min_val})"
-            )
-        return value
+
+        pairs = [
+            (self.ra_min, self.ra_max, "RA"),
+            (self.dec_min, self.dec_max, "Dec"),
+        ]
+        for min_val, max_val, label in pairs:
+            if max_val <= min_val:
+                raise WinterValidationError(
+                    f"{label} range invalid: maximum value ({max_val}) not "
+                    f"greater than minimum value({min_val})"
+                )
+        return self
 
 
 class ConeImageQuery(BaseImageQuery):

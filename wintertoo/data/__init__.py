@@ -1,6 +1,7 @@
 """
 Central module for general data and telescope constants
 """
+
 import json
 import typing
 from pathlib import Path

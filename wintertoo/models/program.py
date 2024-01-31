@@ -4,10 +4,11 @@ Base model for the program database
 Duplicated (sorry) from mirar/pipelines/summer/models/program.py, to avoid
 an elaborate web of imports for WSP.
 """
+
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, FieldValidationInfo, field_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ProgramCredentials(BaseModel):
@@ -30,40 +31,34 @@ class Program(ProgramCredentials):
     pi_email: str = Field(min_length=1, example="someone@institute.com", default=None)
     startdate: date = Field()
     enddate: date = Field()
-    hours_allocated: float = Field(ge=0.0, default=None)
-    hours_remaining: float = Field(ge=0.0, default=None)
+    hours_allocated: float = Field(ge=0.0, default=0.0)
+    hours_used: float = Field(ge=0.0, default=0.0)
     maxpriority: float = Field(description="Max priority")
     progtitle: str = Field(min_length=1, example="A program title", default=None)
 
-    @field_validator("enddate")
-    @classmethod
-    def check_date(cls, enddate: date, info: FieldValidationInfo) -> date:
+    @model_validator(mode="after")
+    def check_date(self):
         """
         Ensure dates are correctly formatted
 
-        :param enddate: end date
-        :param info: field validation info
-        :return: end date
+        :return: self
         """
-        startdate = info.data["startdate"]
+        startdate = self.startdate
+        enddate = self.enddate
         assert enddate > startdate
-        return enddate
+        return self
 
-    @field_validator("hours_remaining")
-    @classmethod
-    def validate_time_allocation(
-        cls, hours_remaining: float, info: FieldValidationInfo
-    ) -> float:
+    @model_validator(mode="after")
+    def validate_time_allocation(self):
         """
         Ensure that time remaining has a sensible value
 
-        :param hours_remaining: hours remaining
-        :param info: field validation info
-        :return: field value
+        :return: self
         """
-        total_time = info.data["hours_allocated"]
-        assert not hours_remaining > total_time
-        assert not hours_remaining < 0.0
-        return hours_remaining
+        total_time = self.hours_allocated
+        hours_used = self.hours_used
+        assert hours_used <= total_time
+        assert hours_used >= 0.0
+        return self
 
     model_config = ConfigDict(extra="forbid")

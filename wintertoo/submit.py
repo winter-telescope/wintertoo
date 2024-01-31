@@ -1,6 +1,7 @@
 """
 Module handling submission of ToO schedules
 """
+
 import logging
 from datetime import datetime
 from typing import Optional
