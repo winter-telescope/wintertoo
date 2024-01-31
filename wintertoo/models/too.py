@@ -1,6 +1,7 @@
 """
 Models for ToO requests
 """
+
 from typing import List, Optional, Union
 
 from astropy.time import Time

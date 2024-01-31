@@ -1,6 +1,7 @@
 """
 Module for validating ToO requests
 """
+
 import json
 import logging
 

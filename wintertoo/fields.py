@@ -1,6 +1,7 @@
 """
 Module for handling field-related functions
 """
+
 import logging
 
 import matplotlib.pyplot as plt

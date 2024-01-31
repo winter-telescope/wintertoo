@@ -1,6 +1,7 @@
 """
 Base models for image queries
 """
+
 from typing import Literal
 
 from astropy import units as u

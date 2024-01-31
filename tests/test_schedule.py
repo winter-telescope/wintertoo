@@ -1,6 +1,7 @@
 """
 Module for testing submission of a schedule
 """
+
 import logging
 import os
 import unittest

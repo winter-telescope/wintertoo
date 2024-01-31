@@ -4,6 +4,7 @@ Base model for the program database
 Duplicated (sorry) from mirar/pipelines/summer/models/program.py, to avoid
 an elaborate web of imports for WSP.
 """
+
 from datetime import date
 from typing import Optional
 

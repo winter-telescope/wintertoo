@@ -1,6 +1,7 @@
 """
 Module for generating schedules
 """
+
 import logging
 from typing import Union
 
