@@ -71,7 +71,7 @@ class ToORequest(BaseModel):
                 f"end_time_mjd ({end_time_mjd}) not "
                 f"greater than start_time_mjd ({start_time})"
             )
-        return end_time_mjd
+        return self
 
     @model_validator(mode="after")
     def validate_t_exp(self):
