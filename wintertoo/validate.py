@@ -231,6 +231,72 @@ def validate_target_dates(
             raise WinterValidationError(err)
 
 
+def validate_time_allocation(
+    schedule: pd.DataFrame, hours_allocated: float, hours_used: float
+):
+    """
+    Validates that the hours used in the schedule do not exceed hours allocated
+
+    :param schedule: Schedule to check
+    :param hours_allocated: hours allocated to the program
+    :param hours_used: hours used by the program
+    :return: None
+    """
+
+    new_hours_used = schedule["visitExpTime"].sum() / 3600
+    total_hours_used = new_hours_used + hours_used
+
+    if total_hours_used > hours_allocated:
+        err = (
+            f"Sum ({total_hours_used}) of hours used ({hours_used}) "
+            f"and request duration ({new_hours_used}) "
+            f"exceeds hours allocated ({hours_allocated})."
+        )
+        logger.error(err)
+        raise WinterValidationError(err)
+
+
+def validate_schedule_with_program(  # pylint: disable=too-many-arguments
+    schedule_request: pd.DataFrame,
+    program: Program,
+):
+    """
+    Big function to validate a schedule request against a program.
+
+    :param schedule_request: Schedule to validate
+    :param program: Program to validate against
+    :return: None
+    """
+    validate_schedule_df(schedule_request)
+    validate_target_visibility(schedule_request)
+    validate_obshist(schedule_request)
+
+    prog_names = list(set(schedule_request["progName"]))
+    assert len(prog_names) == 1
+
+    validate_target_pi(schedule_request, prog_pi=program.pi_name)
+
+    validate_target_priority(
+        schedule=schedule_request, max_priority=program.maxpriority
+    )
+
+    validate_time_allocation(
+        schedule=schedule_request,
+        hours_allocated=program.hours_allocated,
+        hours_used=program.hours_used,
+    )
+
+    program_start_date = Time(str(program.startdate), format="isot")
+
+    program_end_date = Time(str(program.enddate), format="isot")
+
+    validate_target_dates(
+        schedule_request,
+        program_start_date=program_start_date,
+        program_end_date=program_end_date,
+    )
+
+
 def validate_schedule_request(  # pylint: disable=too-many-arguments
     schedule_request: pd.DataFrame,
     program_name: str,
@@ -253,12 +319,6 @@ def validate_schedule_request(  # pylint: disable=too-many-arguments
     :param program_db_host: host of the programs database
     :return: None
     """
-    validate_schedule_df(schedule_request)
-    validate_target_visibility(schedule_request)
-    validate_obshist(schedule_request)
-
-    prog_names = list(set(schedule_request["progName"]))
-    assert len(prog_names) == 1
 
     # Check request using program info
     program = get_and_validate_program_details(
@@ -270,18 +330,4 @@ def validate_schedule_request(  # pylint: disable=too-many-arguments
         program_db_host=program_db_host,
     )
 
-    validate_target_pi(schedule_request, prog_pi=program.pi_name)
-
-    validate_target_priority(
-        schedule=schedule_request, max_priority=program.maxpriority
-    )
-
-    program_start_date = Time(str(program.startdate), format="isot")
-
-    program_end_date = Time(str(program.enddate), format="isot")
-
-    validate_target_dates(
-        schedule_request,
-        program_start_date=program_start_date,
-        program_end_date=program_end_date,
-    )
+    validate_schedule_with_program(schedule_request, program)
