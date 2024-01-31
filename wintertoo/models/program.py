@@ -31,7 +31,7 @@ class Program(ProgramCredentials):
     pi_email: str = Field(min_length=1, example="someone@institute.com", default=None)
     startdate: date = Field()
     enddate: date = Field()
-    hours_allocated: float = Field(ge=0.0, default=None)
+    hours_allocated: float = Field(ge=0.0, default=0.0)
     hours_used: float = Field(ge=0.0, default=0.0)
     maxpriority: float = Field(description="Max priority")
     progtitle: str = Field(min_length=1, example="A program title", default=None)
