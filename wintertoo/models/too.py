@@ -5,14 +5,7 @@ Models for ToO requests
 from typing import List, Optional, Union
 
 from astropy.time import Time
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    FieldValidationInfo,
-    field_validator,
-    model_validator,
-)
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from wintertoo.data import (
     SUMMER_FILTERS,
@@ -64,20 +57,16 @@ class ToORequest(BaseModel):
         title="Allowed airmass range",
     )
 
-    @field_validator("end_time_mjd")
-    @classmethod
-    def validate_field_pairs(
-        cls, end_time_mjd: float, info: FieldValidationInfo
-    ) -> float:
+    @model_validator(mode="after")
+    def validate_end_time(self):
         """
         Field validator to ensure that the end time is greater than the start time
 
-        :param end_time_mjd: field value
-        :param info: field validation info
         :return: validated field value
         """
-        start_time = info.data["start_time_mjd"]
-        if not end_time_mjd > start_time:
+        start_time = self.start_time_mjd
+        end_time_mjd = self.end_time_mjd
+        if end_time_mjd <= start_time:
             raise WinterValidationError(
                 f"end_time_mjd ({end_time_mjd}) not "
                 f"greater than start_time_mjd ({start_time})"
