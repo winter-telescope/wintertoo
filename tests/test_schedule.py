@@ -8,17 +8,13 @@ import unittest
 from datetime import date
 
 import pandas as pd
-from astropy.time import Time
 
 from wintertoo.models import Program, SummerFieldToO, SummerRaDecToO
 from wintertoo.schedule import concat_toos, schedule_field, schedule_ra_dec
 from wintertoo.submit import export_schedule_to_sqlitedb
 from wintertoo.validate import (
-    validate_obshist,
     validate_schedule_df,
-    validate_target_dates,
-    validate_target_pi,
-    validate_target_priority,
+    validate_schedule_with_program,
     validate_target_visibility,
 )
 
@@ -35,6 +31,7 @@ program = Program(
     maxpriority=100,
     startdate=date(2021, 1, 1),
     enddate=date(3023, 12, 31),
+    hours_allocated=1.0,
 )
 
 
@@ -86,21 +83,7 @@ class TestSchedule(unittest.TestCase):
             program=program,
         )
 
-        validate_schedule_df(schedule)
-        validate_obshist(schedule)
-
-        validate_target_priority(schedule=schedule, max_priority=program.maxpriority)
-
-        program_start_date = Time(str(program.startdate), format="isot")
-
-        program_end_date = Time(str(program.enddate), format="isot")
-
-        validate_target_dates(
-            schedule,
-            program_start_date=program_start_date,
-            program_end_date=program_end_date,
-        )
-        validate_target_pi(schedule, prog_pi=program.pi_name)
+        validate_schedule_with_program(schedule, program)
 
         export_schedule_to_sqlitedb(schedule, "test_schedule.db")
 
