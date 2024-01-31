@@ -32,7 +32,7 @@ class Program(ProgramCredentials):
     startdate: date = Field()
     enddate: date = Field()
     hours_allocated: float = Field(ge=0.0, default=None)
-    hours_remaining: float = Field(ge=0.0, default=None)
+    hours_used: float = Field(ge=0.0, default=0.0)
     maxpriority: float = Field(description="Max priority")
     progtitle: str = Field(min_length=1, example="A program title", default=None)
 
@@ -57,8 +57,8 @@ class Program(ProgramCredentials):
         """
         total_time = self.hours_allocated
         hours_used = self.hours_used
-        assert not hours_used > total_time
-        assert not hours_used < 0
+        assert hours_used <= total_time
+        assert hours_used >= 0.0
         return self
 
     model_config = ConfigDict(extra="forbid")
