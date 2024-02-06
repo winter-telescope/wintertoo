@@ -32,7 +32,7 @@ class ToORequest(BaseModel):
         title="Priority for target",
         ge=0.0,
     )
-    target_name: str | None = Field(
+    target_name: Optional[str] = Field(
         title="Name of the target",
         min_length=1,
         max_length=MAX_TARGNAME_LEN,
