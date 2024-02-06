@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 FILE_DATE_FORMAT = "%Y_%m_%d_%H_%M_%S"
 
 
-def get_db_file_name(program_name: str, date: datetime | None = None) -> str:
+def get_db_file_name(program_name: str, date: Optional[datetime] = None) -> str:
     """
     Function to get the name of a database file
 
@@ -76,7 +76,7 @@ def submit_schedule(  # pylint: disable=too-many-arguments
     program_db_password: str,
     save_path: Optional[str] = None,
     submit_trigger: bool = True,
-) -> Path | None:
+) -> Optional[Path]:
     """
     Function to validate, and then optionally submit, a schedule
 
