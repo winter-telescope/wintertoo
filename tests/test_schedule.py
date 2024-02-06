@@ -85,7 +85,8 @@ class TestSchedule(unittest.TestCase):
 
         validate_schedule_with_program(schedule, program)
 
-        export_schedule_to_sqlitedb(schedule, "test_schedule.db")
+        output_path = export_schedule_to_sqlitedb(schedule, test_data_dir)
+        output_path.unlink()
 
     def test_schedule_utils(self):
         """

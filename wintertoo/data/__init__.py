@@ -30,6 +30,11 @@ WINTER_SCIENCE_FILTERS = ["Y", "J", "Hs"]
 SUMMER_BASE_WIDTH = 0.26112
 WINTER_BASE_WIDTH = 1.0
 
+MAX_TARGNAME_LEN = 30
+
+WinterImageTypes = Literal["exposure", "raw", "science", "stack", "diff"]
+DEFAULT_IMAGE_TYPE = "stack"
+
 PROGRAM_DB_HOST = "jagati.caltech.edu"
 
 too_schedule_config_path = data_dir.joinpath("observing_request_schema.json")
