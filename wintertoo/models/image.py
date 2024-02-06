@@ -2,6 +2,8 @@
 Base models for image queries
 """
 
+from typing import Optional
+
 from astropy import units as u
 from astropy.time import Time
 from pydantic import BaseModel, Field, model_validator
@@ -49,7 +51,7 @@ class TargetImageQuery(ProgramImageQuery):
     Model for image queries based on target name
     """
 
-    target_name: str | None = Field(
+    target_name: Optional[str] = Field(
         title="Name of target",
         min_length=1,
         max_length=MAX_TARGNAME_LEN,
