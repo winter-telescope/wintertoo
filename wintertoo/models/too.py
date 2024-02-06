@@ -8,6 +8,7 @@ from astropy.time import Time
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from wintertoo.data import (
+    MAX_TARGNAME_LEN,
     SUMMER_FILTERS,
     WINTER_SCIENCE_FILTERS,
     SummerFilters,
@@ -30,6 +31,13 @@ class ToORequest(BaseModel):
         default=50.0,
         title="Priority for target",
         ge=0.0,
+    )
+    target_name: str | None = Field(
+        title="Name of the target",
+        min_length=1,
+        max_length=MAX_TARGNAME_LEN,
+        examples=["SN2021abc", "ZTF19aapreis"],
+        default=get_default_value("targName"),
     )
     t_exp: float = Field(
         default=get_default_value("visitExpTime"),
@@ -116,7 +124,7 @@ class ObsWithRaDec(BaseModel):
     )
     use_field_grid: bool = Field(
         title="boolean whether to select nearest field in grid for central ra/dec",
-        default=True,
+        default=False,
     )
 
 

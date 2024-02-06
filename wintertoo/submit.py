@@ -4,6 +4,7 @@ Module handling submission of ToO schedules
 
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
@@ -13,8 +14,27 @@ from wintertoo.validate import validate_schedule_df, validate_schedule_request
 
 logger = logging.getLogger(__name__)
 
+FILE_DATE_FORMAT = "%Y_%m_%d_%H_%M_%S"
 
-def export_schedule_to_sqlitedb(schedule: pd.DataFrame, base_save_path: str):
+
+def get_db_file_name(program_name: str, date: datetime | None = None) -> str:
+    """
+    Function to get the name of a database file
+
+    :param program_name: Name of program
+    :param date: Date to use
+    :return: String of database file name
+    """
+
+    if date is None:
+        date = datetime.now()
+
+    strf_time = date.strftime(FILE_DATE_FORMAT)
+
+    return f"request_{program_name}_{strf_time}.db"
+
+
+def export_schedule_to_sqlitedb(schedule: pd.DataFrame, base_save_path: str) -> Path:
     """
     Function to export a schedule to an sqlite db file
 
@@ -25,16 +45,25 @@ def export_schedule_to_sqlitedb(schedule: pd.DataFrame, base_save_path: str):
     # Validate format of schedule using json schema
     validate_schedule_df(schedule)
 
-    date = datetime.now().strftime("%m_%d_%Y_%H_%s")
+    program_name = str(schedule["progName"].iloc[0])
 
-    save_path = f"{base_save_path}timed_requests_{date}.db"
+    schedule_file_name = get_db_file_name(program_name=program_name)
+
+    save_path = Path(base_save_path).joinpath(schedule_file_name)
 
     logger.info(f"Saving to {save_path}")
 
     sqlite_table = "Summary"
 
+    if not save_path.parent.exists():
+        err = f"Parent directory {save_path.parent} does not exist"
+        logger.error(err)
+        raise ValueError(err)
+
     engine = create_engine(f"sqlite:///{save_path}?check_same_thread=False", echo=True)
     schedule.to_sql(sqlite_table, engine, if_exists="replace", index=False)
+
+    return save_path
 
 
 def submit_schedule(  # pylint: disable=too-many-arguments
@@ -47,7 +76,7 @@ def submit_schedule(  # pylint: disable=too-many-arguments
     program_db_password: str,
     save_path: Optional[str] = None,
     submit_trigger: bool = True,
-):
+) -> Path | None:
     """
     Function to validate, and then optionally submit, a schedule
 
@@ -77,4 +106,6 @@ def submit_schedule(  # pylint: disable=too-many-arguments
             logger.error(err)
             raise ValueError(err)
 
-        export_schedule_to_sqlitedb(schedule, save_path)
+        return export_schedule_to_sqlitedb(schedule, save_path)
+
+    return None

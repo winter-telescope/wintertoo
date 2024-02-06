@@ -45,6 +45,7 @@ def make_schedule(
         for filter_name in too.filters:
             for _ in range(too.n_exp):
                 new = {
+                    "targName": too.target_name,
                     "raDeg": too.ra_deg,
                     "decDeg": too.dec_deg,
                     "fieldID": too.field_id,
