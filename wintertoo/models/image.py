@@ -31,13 +31,13 @@ class ProgramImageQuery(BaseModel):
     )
     start_date: int = Field(
         title="Start date for images",
-        le=get_date(Time.now()),
+        le=get_date(Time.now() + 1 * u.day),
         default=get_date(Time.now() - 30.0 * u.day),
         examples=[get_date(Time.now() - 30.0 * u.day), "20230601"],
     )
     end_date: int = Field(
         title="End date for images",
-        le=get_date(Time.now()),
+        le=get_date(Time.now() + 1 * u.day),
         default=get_date(Time.now()),
         examples=[get_date(Time.now() - 30.0 * u.day), get_date(Time.now())],
     )
