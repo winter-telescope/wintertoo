@@ -64,6 +64,10 @@ class ToORequest(BaseModel):
         le=5,
         title="Allowed airmass range",
     )
+    use_best_detector: bool = Field(
+        default=get_default_value("bestDetector"),
+        title="Place ra/dec at the center of the best detector",
+    )
 
     @model_validator(mode="after")
     def validate_end_time(self):
@@ -126,6 +130,19 @@ class ObsWithRaDec(BaseModel):
         title="boolean whether to select nearest field in grid for central ra/dec",
         default=False,
     )
+
+    @model_validator(mode="after")
+    def validate_field_best_detector(self):
+        """
+        Field validator to ensure that the end time is greater than the start time
+
+        :return: validated field value
+        """
+        if self.use_best_detector & self.use_field_grid:
+            raise WinterValidationError(
+                "Cannot use both use_best_detector and use_field_grid"
+            )
+        return self
 
 
 class ObsWithField(BaseModel):
