@@ -31,19 +31,41 @@ class ProgramImageQuery(BaseModel):
     )
     start_date: int = Field(
         title="Start date for images",
-        le=get_date(Time.now() + 1 * u.day),
         default=get_date(Time.now() - 30.0 * u.day),
         examples=[get_date(Time.now() - 30.0 * u.day), "20230601"],
     )
     end_date: int = Field(
         title="End date for images",
-        le=get_date(Time.now() + 1 * u.day),
         default=get_date(Time.now()),
         examples=[get_date(Time.now() - 30.0 * u.day), get_date(Time.now())],
     )
     kind: WinterImageTypes = Field(
         default=DEFAULT_IMAGE_TYPE, example="raw/science/diff"
     )
+
+    @model_validator(mode="after")
+    def validate_date_order(self):
+        """
+        Ensure that the start date is before the end date
+
+        :return: validated field value
+        """
+        if self.start_date > self.end_date:
+            raise WinterValidationError("Start date is after end date")
+
+        today = get_date(Time.now())
+
+        if self.start_date > today:
+            raise WinterValidationError(
+                f"Start date is in the future, (today is {today})"
+            )
+
+        if self.end_date > today:
+            raise WinterValidationError(
+                f"End date is in the future, (today is {today})"
+            )
+
+        return self
 
 
 class TargetImageQuery(ProgramImageQuery):
