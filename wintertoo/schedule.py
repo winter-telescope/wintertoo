@@ -43,14 +43,15 @@ def make_schedule(
 
     for too in toos:
         for filter_name in too.filters:
-            for _ in range(too.n_exp):
+            for _ in range(too.n_repetitions):
                 new = {
                     "targName": too.target_name,
                     "raDeg": too.ra_deg,
                     "decDeg": too.dec_deg,
                     "fieldID": too.field_id,
                     "filter": filter_name,
-                    "visitExpTime": too.t_exp,
+                    "visitExpTime": too.total_exposure_time,
+                    "singleExpTime": too.single_exposure_time,
                     "priority": too.target_priority,
                     "progPI": program.pi_name,
                     "progName": program.progname,
@@ -121,7 +122,9 @@ def schedule_ra_dec(
     else:
         field_id = get_default_value("fieldID")
 
-    full_request = FullTooRequest(field_id=field_id, **too.model_dump())
+    full_request = FullTooRequest(
+        field_id=field_id, **too.model_dump(exclude=too.model_computed_fields.keys())
+    )
 
     schedule = make_schedule(
         toos=[full_request],
@@ -152,7 +155,11 @@ def schedule_field(
     ra_deg = float(field_details["RA"].iloc[0])
     dec_deg = float(field_details["Dec"].iloc[0])
 
-    full_request = FullTooRequest(ra_deg=ra_deg, dec_deg=dec_deg, **too.model_dump())
+    full_request = FullTooRequest(
+        ra_deg=ra_deg,
+        dec_deg=dec_deg,
+        **too.model_dump(exclude=too.model_computed_fields.keys()),
+    )
 
     schedule = make_schedule(
         toos=[full_request],

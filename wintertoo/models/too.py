@@ -5,7 +5,14 @@ Models for ToO requests
 from typing import List, Optional, Union
 
 from astropy.time import Time
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    computed_field,
+    model_validator,
+)
 
 from wintertoo.data import (
     MAX_TARGNAME_LEN,
@@ -39,14 +46,20 @@ class ToORequest(BaseModel):
         examples=["SN2021abc", "ZTF19aapreis"],
         default=get_default_value("targName"),
     )
-    t_exp: float = Field(
+    total_exposure_time: float = Field(
         default=get_default_value("visitExpTime"),
         title="Combined Exposure Time across dithers (s)",
         ge=1.0,
+        validation_alias=AliasChoices("total_exposure_time", "t_exp"),
     )
-    n_exp: int = Field(default=1, ge=1, title="Number of dither sets")
     n_dither: int = Field(
         default=get_default_value("ditherNumber"), ge=1, title="Number of dithers"
+    )
+    n_repetitions: int = Field(
+        default=1,
+        ge=1,
+        title="Number of repeated dither sets",
+        validation_alias=AliasChoices("n_repetitions", "n_exp"),
     )
     dither_distance: float = Field(
         get_default_value("ditherStepSize"), ge=0.0, title="dither distance (arcsec)"
@@ -68,6 +81,17 @@ class ToORequest(BaseModel):
         default=get_default_value("bestDetector"),
         title="Place ra/dec at the center of the best detector",
     )
+
+    @computed_field
+    @property
+    def single_exposure_time(self) -> float:
+        """
+        Computed field to get the exposure time per dither.
+        Equivalent to total_exposure_time/n_dither
+
+        :return: Exposure time per dither
+        """
+        return self.total_exposure_time / self.n_dither
 
     @model_validator(mode="after")
     def validate_end_time(self):
@@ -93,7 +117,7 @@ class ToORequest(BaseModel):
         :return: Validated total exposure time per dither set
         """
         n_dithers = self.n_dither
-        t_exp = self.t_exp
+        t_exp = self.total_exposure_time
         t_per_dither = t_exp / n_dithers
 
         if t_per_dither > MAX_EXPOSURE_TIME:
