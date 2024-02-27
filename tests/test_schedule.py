@@ -79,6 +79,8 @@ class TestSchedule(unittest.TestCase):
             too=SummerRaDecToO(
                 ra_deg=173.7056754,
                 dec_deg=11.253441,
+                total_exposure_time=100.0,
+                n_dither=1,
             ),
             program=program,
         )
