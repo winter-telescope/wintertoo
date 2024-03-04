@@ -6,7 +6,7 @@ from typing import Optional
 
 from astropy import units as u
 from astropy.time import Time
-from pydantic import BaseModel, Field, model_validator
+from pydantic import AliasChoices, BaseModel, Field, model_validator
 
 from wintertoo.data import DEFAULT_IMAGE_TYPE, MAX_TARGNAME_LEN, WinterImageTypes
 from wintertoo.errors import WinterValidationError
@@ -39,8 +39,10 @@ class ProgramImageQuery(BaseModel):
         default=get_date(Time.now()),
         examples=[get_date(Time.now() - 30.0 * u.day), get_date(Time.now())],
     )
-    kind: WinterImageTypes = Field(
-        default=DEFAULT_IMAGE_TYPE, example="raw/science/diff"
+    image_type: WinterImageTypes = Field(
+        default=DEFAULT_IMAGE_TYPE,
+        example="raw/science/diff",
+        validation_alias=AliasChoices("image_type", "kind"),
     )
 
     @model_validator(mode="after")
