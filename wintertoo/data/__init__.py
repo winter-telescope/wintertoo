@@ -32,7 +32,7 @@ WINTER_BASE_WIDTH = 1.0
 
 MAX_TARGNAME_LEN = 30
 
-WinterImageTypes = Literal["exposure", "raw", "science", "stack", "diff"]
+WinterImageTypes = Literal["exposure", "raw", "science", "stack", "diff", "avro"]
 DEFAULT_IMAGE_TYPE = "stack"
 
 PROGRAM_DB_HOST = "jagati.caltech.edu"
