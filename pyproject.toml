@@ -96,3 +96,6 @@ disable=["logging-fstring-interpolation"]
 good-names=["ax", "ra", "df", "pi", "i"]
 exclude-too-few-public-methods=["pydantic.*"]
 extension-pkg-whitelist=["pydantic"]
+
+[tool.pylint.typecheck]
+generated-members=["u.*"]
