@@ -31,12 +31,12 @@ class ProgramImageQuery(BaseModel):
     )
     start_date: int = Field(
         title="Start date for images",
-        default=get_date(Time.now() - 30.0 * u.day),
+        default=None,
         examples=[get_date(Time.now() - 30.0 * u.day), "20230601"],
     )
     end_date: int = Field(
         title="End date for images",
-        default=get_date(Time.now()),
+        default=None,
         examples=[get_date(Time.now() - 30.0 * u.day), get_date(Time.now())],
     )
     image_type: WinterImageTypes = Field(
@@ -52,6 +52,12 @@ class ProgramImageQuery(BaseModel):
 
         :return: validated field value
         """
+        if self.start_date is None:
+            self.start_date = get_date(Time.now() - 30.0 * u.day)
+
+        if self.end_date is None:
+            self.end_date = get_date(Time.now())
+
         if self.start_date > self.end_date:
             raise WinterValidationError("Start date is after end date")
 

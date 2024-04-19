@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wintertoo"
-version = "1.5.0"
+version = "1.5.1"
 description = ""
 authors = [
     {name = "Robert Stein", email = "rdstein@caltech.edu"},
@@ -96,3 +96,6 @@ disable=["logging-fstring-interpolation"]
 good-names=["ax", "ra", "df", "pi", "i"]
 exclude-too-few-public-methods=["pydantic.*"]
 extension-pkg-whitelist=["pydantic"]
+
+[tool.pylint.typecheck]
+generated-members=["u.*"]
