@@ -39,12 +39,11 @@ class ToORequest(BaseModel):
         title="Priority for target",
         ge=0.0,
     )
-    target_name: Optional[str] = Field(
+    target_name: str = Field(
         title="Name of the target",
         min_length=1,
         max_length=MAX_TARGNAME_LEN,
         examples=["SN2021abc", "ZTF19aapreis"],
-        default=get_default_value("targName"),
     )
     total_exposure_time: float = Field(
         default=get_default_value("visitExpTime"),
