@@ -63,6 +63,7 @@ class TestSchedule(unittest.TestCase):
                 dec_deg=11.253441,
                 start_time_mjd=62721.1894969287,
                 end_time_mjd=62722.1894969452,
+                target_name="test_radec",
             ),
             program=program,
         )
@@ -81,6 +82,7 @@ class TestSchedule(unittest.TestCase):
                 dec_deg=11.253441,
                 total_exposure_time=100.0,
                 n_dither=1,
+                target_name="test_radec",
             ),
             program=program,
         )
@@ -100,6 +102,7 @@ class TestSchedule(unittest.TestCase):
 
         field_too = SummerFieldToO(
             field_id=1,
+            target_name="test_field",
         )
 
         schedule_field(
@@ -109,6 +112,11 @@ class TestSchedule(unittest.TestCase):
         )
 
         concat_toos(
-            [field_too, SummerRaDecToO(ra_deg=173.7056754, dec_deg=11.253441)],
+            [
+                field_too,
+                SummerRaDecToO(
+                    ra_deg=173.7056754, dec_deg=11.253441, target_name="test_radec"
+                ),
+            ],
             program=program,
         )
