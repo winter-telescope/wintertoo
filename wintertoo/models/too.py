@@ -64,11 +64,14 @@ class ToORequest(BaseModel):
         get_default_value("ditherStepSize"), ge=0.0, title="dither distance (arcsec)"
     )
     start_time_mjd: Optional[float] = Field(
-        default=Time.now().mjd + 0.01,
+        default=None,
         title="ToO validity start (MJD)",
+        example=Time.now().mjd,
     )
     end_time_mjd: Optional[float] = Field(
-        default=Time.now().mjd + 1, ge=Time.now().mjd, title="ToO validity end (MJD)"
+        default=None,
+        example=Time.now().mjd + 1,
+        title="ToO validity end (MJD)",
     )
     max_airmass: Optional[float] = Field(
         default=get_default_value("maxAirmass"),
@@ -91,6 +94,34 @@ class ToORequest(BaseModel):
         :return: Exposure time per dither
         """
         return self.total_exposure_time / self.n_dither
+
+    @model_validator(mode="after")
+    def validate_date_order(self):
+        """
+        Ensure that the start date is before the end date
+
+        :return: validated field value
+        """
+        if self.start_time_mjd is None:
+            self.start_time_mjd = Time.now().mjd
+
+        if self.end_time_mjd is None:
+            self.end_time_mjd = Time.now().mjd + 7
+
+        if self.start_time_mjd > self.end_time_mjd:
+            raise WinterValidationError(
+                f"Start time ({self.start_time_mjd}) is "
+                f"after end time ({self.end_time_mjd})"
+            )
+
+        now = Time.now().mjd
+
+        if self.end_time_mjd < now:
+            raise WinterValidationError(
+                f"End date ({self.end_time_mjd}) is in the past, (time now is {now})"
+            )
+
+        return self
 
     @model_validator(mode="after")
     def validate_end_time(self):
