@@ -58,7 +58,7 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
         sun_rise = palomar_observer.sun_rise_time(time - 0.05 * u.day, which="previous")
     sun_set = palomar_observer.sun_set_time(time, which="next")
     if isinstance(sun_rise.value, Masked):
-        sun_set = palomar_observer.sun_rise_time(time + 0.05 * u.day, which="previous")
+        sun_set = palomar_observer.sun_rise_time(time + 0.05 * u.day, which="next")
 
     night = sun_set.jd - sun_rise.jd
     if night >= 1:
