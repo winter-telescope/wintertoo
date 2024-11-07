@@ -18,8 +18,8 @@ from wintertoo.models.too import (
     SummerRaDecToO,
     WinterFieldToO,
     WinterRaDecToO,
+    is_summer,
 )
-from wintertoo.utils import is_summer
 from wintertoo.validate import validate_schedule_df
 
 logger = logging.getLogger(__name__)

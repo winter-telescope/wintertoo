@@ -2,6 +2,7 @@
 Models for ToO requests
 """
 
+import logging
 from typing import List, Optional, Union
 
 from astropy.time import Time
@@ -23,6 +24,8 @@ from wintertoo.data import (
     get_default_value,
 )
 from wintertoo.errors import WinterValidationError
+
+logger = logging.getLogger(__name__)
 
 MIN_EXPOSURE_TIME = 0.28
 MAX_EXPOSURE_TIME = 300.0
@@ -248,3 +251,20 @@ class WinterRaDecToO(Winter, RaDecToO):
 
 
 AllTooClasses = Union[SummerFieldToO, SummerRaDecToO, WinterFieldToO, WinterRaDecToO]
+
+
+def is_summer(too: Union[Winter, Summer]) -> bool:
+    """
+    Checks a ToO Request to ensure it is either a Summer or Winter request
+
+    :param too: ToO request
+    :return: boolean
+    """
+    if isinstance(too, Summer):
+        return True
+    if isinstance(too, Winter):
+        return False
+
+    err = f"Unrecognised ToO type {type(too)}"
+    logger.error(err)
+    raise TypeError(err)
