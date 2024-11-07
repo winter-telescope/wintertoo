@@ -82,6 +82,8 @@ class TestSchedule(unittest.TestCase):
                 dec_deg=11.253441,
                 total_exposure_time=100.0,
                 n_dither=1,
+                start_time_mjd=62721.1894969287,
+                end_time_mjd=62722.1894969452,
                 target_name="test_radec",
             ),
             program=program,

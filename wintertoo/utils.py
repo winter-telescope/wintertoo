@@ -5,16 +5,16 @@ Created on Tue Jan 25 13:51:59 2022
 @author: frostig, belatedly edited by Robert Stein
 """
 import logging
-from typing import Union
 
 import astropy.time
 import numpy as np
 import pandas as pd
+from astropy import units as u
 from astropy.coordinates import AltAz, SkyCoord
 from astropy.time import Time
+from astropy.utils.masked import Masked
 
 from wintertoo.data import PALOMAR_LOC, palomar_observer
-from wintertoo.models.too import Summer, Winter
 
 logger = logging.getLogger(__name__)
 
@@ -51,8 +51,15 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
     """
     loc = SkyCoord(ra=ra, dec=dec, frame="icrs")
     time = Time(time_mjd, format="mjd")
+
+    # Rise/fade can fail if target is close to a bin edge
     sun_rise = palomar_observer.sun_rise_time(time, which="previous")
+    if isinstance(sun_rise.value, Masked):
+        sun_rise = palomar_observer.sun_rise_time(time - 0.05 * u.day, which="previous")
     sun_set = palomar_observer.sun_set_time(time, which="next")
+    if isinstance(sun_rise.value, Masked):
+        sun_set = palomar_observer.sun_rise_time(time + 0.05 * u.day, which="next")
+
     night = sun_set.jd - sun_rise.jd
     if night >= 1:
         # if next day, subtract a day
@@ -66,10 +73,12 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
     df = pd.DataFrame(data={"time": time_array, "alt": altaz.alt})
     df = df[df["alt"] >= MINIMUM_ELEVATION]
 
-    try:
-        time_up = df["time"].iloc[-1] - df["time"].iloc[0]
-    except KeyError:
-        time_up = 0
+    time_up = 0
+    if len(df) > 0:
+        try:
+            time_up = df["time"].iloc[-1] - df["time"].iloc[0]
+        except KeyError:
+            pass
 
     if time_up > 0:
         is_available = (
@@ -83,23 +92,6 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
         avail_bool = False
 
     return avail_bool, is_available
-
-
-def is_summer(too: Union[Winter, Summer]) -> bool:
-    """
-    Checks a ToO Request to ensure it is either a Summer or Winter request
-
-    :param too: ToO request
-    :return: boolean
-    """
-    if isinstance(too, Summer):
-        return True
-    if isinstance(too, Winter):
-        return False
-
-    err = f"Unrecognised ToO type {type(too)}"
-    logger.error(err)
-    raise TypeError(err)
 
 
 def get_date(time: Time) -> int:
