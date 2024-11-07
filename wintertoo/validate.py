@@ -20,7 +20,7 @@ from wintertoo.utils import up_tonight
 logger = logging.getLogger(__name__)
 
 
-def get_and_validate_program_details(  # pylint: disable=too-many-arguments
+def get_and_validate_program_details(  # pylint: disable=R0913,R0917
     program_name: str,
     program_api_key: str,
     program_db_user: str = None,
@@ -256,7 +256,7 @@ def validate_time_allocation(
         raise WinterValidationError(err)
 
 
-def validate_schedule_with_program(  # pylint: disable=too-many-arguments
+def validate_schedule_with_program(
     schedule_request: pd.DataFrame,
     program: Program,
 ):
@@ -297,7 +297,7 @@ def validate_schedule_with_program(  # pylint: disable=too-many-arguments
     )
 
 
-def validate_schedule_request(  # pylint: disable=too-many-arguments
+def validate_schedule_request(  # pylint: disable=R0913,R0917
     schedule_request: pd.DataFrame,
     program_name: str,
     program_api_key: str,

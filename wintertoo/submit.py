@@ -66,7 +66,7 @@ def export_schedule_to_sqlitedb(schedule: pd.DataFrame, base_save_path: str) -> 
     return save_path
 
 
-def submit_schedule(  # pylint: disable=too-many-arguments
+def submit_schedule(  # pylint: disable=R0913,R0917
     schedule: pd.DataFrame,
     program_api_key: str,
     program_name: str,

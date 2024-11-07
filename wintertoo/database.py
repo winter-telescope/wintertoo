@@ -37,7 +37,7 @@ def get_engine(
     )
 
 
-def get_program_details(  # pylint: disable=too-many-arguments,too-many-locals
+def get_program_details(  # pylint: disable=R0913,R0914,R0917
     program_name: str,
     program_api_key: str,
     program_db_user: str = None,
