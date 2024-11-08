@@ -18,8 +18,8 @@ summer_fields = pd.read_csv(summer_fields_path, sep=r"\s+")
 
 winter_fields_path = data_dir.joinpath("winter_fields.txt")
 all_winter_fields = pd.read_csv(winter_fields_path, sep=r"\s+")
-winter_fields = all_winter_fields[all_winter_fields['ID'] < 41170]
-winter_secondary_fields = all_winter_fields[all_winter_fields['ID'] >= 41170]
+winter_fields = all_winter_fields[all_winter_fields["ID"] < 41170]
+winter_secondary_fields = all_winter_fields[all_winter_fields["ID"] >= 41170]
 
 SummerFilters = Literal["u", "g", "r", "i"]
 
