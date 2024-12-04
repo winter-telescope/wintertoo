@@ -53,14 +53,14 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
     time = Time(time_mjd, format="mjd")
 
     # Rise/fade can fail if target is close to a bin edge
-    sun_rise = palomar_observer.sun_rise_time(time, which="previous")
+    sun_rise = palomar_observer.sun_rise_time(time, which="next")
     if isinstance(sun_rise.value, Masked):
-        sun_rise = palomar_observer.sun_rise_time(time - 0.05 * u.day, which="previous")
+        sun_rise = palomar_observer.sun_rise_time(time - 0.05 * u.day, which="next")
     sun_set = palomar_observer.sun_set_time(time, which="next")
     if isinstance(sun_rise.value, Masked):
         sun_set = palomar_observer.sun_rise_time(time + 0.05 * u.day, which="next")
 
-    night = sun_set.jd - sun_rise.jd
+    night = sun_rise.jd - sun_set.jd
     if night >= 1:
         # if next day, subtract a day
         time_array = np.linspace(sun_set.jd, sun_set.jd + (night - 1), 100)
