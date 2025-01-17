@@ -56,6 +56,6 @@ def get_default_value(key: str):
 
 
 # define location of Palomar Observatory
-PALOMAR_LOC = coords.EarthLocation.of_site("Palomar")
+PALOMAR_LOC = coords.EarthLocation.of_site("Palomar", refresh_cache=True)
 
 palomar_observer = astroplan.Observer(location=PALOMAR_LOC)
