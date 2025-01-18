@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Jan 25 13:51:59 2022
-@author: frostig, belatedly edited by Robert Stein
+@author: frostig, belatedly edited by Robert Stein, further belatedly edited by Sam Rose
 """
 import logging
 
@@ -38,6 +38,54 @@ def get_alt_az(times_mjd: list, ra: float, dec: float) -> tuple:
     return alt_array, az_array
 
 
+def get_night_times(time_mjd: astropy.time.Time):
+    """
+    Get an array of times which cover the night of the date given.
+
+    Parameters
+    ----------
+    time_mjd : astropy.time.Time
+        date in MJD (median Julian Date), e.g. 59480 (Sept 23)
+
+    Returns
+    -------
+    time_array : numpy array
+        array of times during the night
+
+    """
+    time = Time(time_mjd, format="mjd")
+
+    # Rise/fade can fail if target is close to a bin edge
+    sun_rise_next = palomar_observer.sun_rise_time(time, which="next")
+    sun_set_next = palomar_observer.sun_set_time(time, which="next")
+    sun_set_prev = palomar_observer.sun_set_time(time, which="previous")
+
+    if isinstance(sun_rise_next.value, Masked):
+        sun_rise_next = palomar_observer.sun_rise_time(
+            time - 0.05 * u.day, which="next"
+        )
+
+    if isinstance(sun_set_next.value, Masked):
+        sun_set_next = palomar_observer.sun_set_time(time - 0.05 * u.day, which="next")
+
+    if isinstance(sun_set_prev.value, Masked):
+        sun_set_prev = palomar_observer.sun_set_time(
+            time + 0.05 * u.day, which="previous"
+        )
+
+    until_next_sunset = sun_set_next.jd - time.jd
+    until_next_sunrise = sun_rise_next.jd - time.jd
+
+    if until_next_sunrise < until_next_sunset:
+        # this is the case where time is during the night
+        time_array = np.linspace(sun_set_prev.jd, sun_rise_next.jd, 100)
+    else:
+        # this is the case where time is during the day
+        time_array = np.linspace(sun_set_next.jd, sun_rise_next.jd, 100)
+
+    return time_array
+
+
 def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, str]:
     """
     what is up (above altitude 20 deg) in a given night?
@@ -50,22 +98,8 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
     :return:
     """
     loc = SkyCoord(ra=ra, dec=dec, frame="icrs")
+    time_array = get_night_times(time_mjd)
     time = Time(time_mjd, format="mjd")
-
-    # Rise/fade can fail if target is close to a bin edge
-    sun_rise = palomar_observer.sun_rise_time(time, which="previous")
-    if isinstance(sun_rise.value, Masked):
-        sun_rise = palomar_observer.sun_rise_time(time - 0.05 * u.day, which="previous")
-    sun_set = palomar_observer.sun_set_time(time, which="next")
-    if isinstance(sun_rise.value, Masked):
-        sun_set = palomar_observer.sun_rise_time(time + 0.05 * u.day, which="next")
-
-    night = sun_set.jd - sun_rise.jd
-    if night >= 1:
-        # if next day, subtract a day
-        time_array = np.linspace(sun_set.jd, sun_set.jd + (night - 1), 100)
-    else:
-        time_array = np.linspace(sun_set.jd, sun_set.jd + night, 100)
 
     altaz = loc.transform_to(
         AltAz(obstime=Time(time_array, format="jd"), location=PALOMAR_LOC)
@@ -81,12 +115,21 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
             pass
 
     if time_up > 0:
-        is_available = (
-            f"Object is up between UTC "
-            f'{Time(df["time"].iloc[0], format="jd").isot} '
-            f'and {Time(df["time"].iloc[-1], format="jd").isot}'
-        )
-        avail_bool = True
+        if time.jd > df["time"].iloc[-1]:
+            is_available = (
+                f"Object is up between UTC "
+                f'{Time(df["time"].iloc[0]+1, format="jd").isot} '
+                f'and {Time(df["time"].iloc[-1]+1, format="jd").isot}'
+            )
+            avail_bool = True
+
+        else:
+            is_available = (
+                f"Object is up between UTC "
+                f'{Time(df["time"].iloc[0], format="jd").isot} '
+                f'and {Time(df["time"].iloc[-1], format="jd").isot}'
+            )
+            avail_bool = True
     else:
         is_available = "Object is not up"
         avail_bool = False
