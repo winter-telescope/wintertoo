@@ -116,8 +116,12 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
 
     if time_up > 0:
         if time.jd > df["time"].iloc[-1]:
-            is_available = "Object has set"
-            avail_bool = False
+            is_available = (
+                f"Object is up between UTC "
+                f'{Time(df["time"].iloc[0]+1, format="jd").isot} '
+                f'and {Time(df["time"].iloc[-1]+1, format="jd").isot}'
+            )
+            avail_bool = True
 
         else:
             is_available = (
