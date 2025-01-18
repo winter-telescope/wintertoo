@@ -99,6 +99,7 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
     """
     loc = SkyCoord(ra=ra, dec=dec, frame="icrs")
     time_array = get_night_times(time_mjd)
+    time = Time(time_mjd, format="mjd")
 
     altaz = loc.transform_to(
         AltAz(obstime=Time(time_array, format="jd"), location=PALOMAR_LOC)
@@ -114,12 +115,17 @@ def up_tonight(time_mjd: astropy.time.Time, ra: str, dec: str) -> tuple[bool, st
             pass
 
     if time_up > 0:
-        is_available = (
-            f"Object is up between UTC "
-            f'{Time(df["time"].iloc[0], format="jd").isot} '
-            f'and {Time(df["time"].iloc[-1], format="jd").isot}'
-        )
-        avail_bool = True
+        if time.jd > df["time"].iloc[-1]:
+            is_available = "Object has set"
+            avail_bool = False
+
+        else:
+            is_available = (
+                f"Object is up between UTC "
+                f'{Time(df["time"].iloc[0], format="jd").isot} '
+                f'and {Time(df["time"].iloc[-1], format="jd").isot}'
+            )
+            avail_bool = True
     else:
         is_available = "Object is not up"
         avail_bool = False
