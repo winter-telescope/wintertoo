@@ -28,6 +28,7 @@ program = Program(
     pi_name="Stein",
     progname="2021A000",
     prog_key="763244309190298696786072636901190268976229595667748695826878",
+    pi_email="fake@nowhere.com",
     maxpriority=100,
     startdate=date(2021, 1, 1),
     enddate=date(3023, 12, 31),
