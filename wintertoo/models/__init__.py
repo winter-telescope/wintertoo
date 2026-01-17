@@ -12,9 +12,9 @@ from wintertoo.models.image import (
 from wintertoo.models.program import Program, ProgramCredentials
 from wintertoo.models.too import (
     AllTooClasses,
+    SpringRaDecToO,
     SummerFieldToO,
     SummerRaDecToO,
     WinterFieldToO,
     WinterRaDecToO,
-    SpringRaDecToO
 )

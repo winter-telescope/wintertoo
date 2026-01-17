@@ -48,7 +48,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "black >= 24.1.0",
-    "isort >= 5.13.0",
+    "isort >= 7.0.0",
     "pylint >= 3.0.0",
     "coveralls",
 ]

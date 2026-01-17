@@ -3,7 +3,7 @@ Models for ToO requests
 """
 
 import logging
-from typing import List, Optional, Union, Literal
+from typing import List, Literal, Optional, Union
 
 from astropy.time import Time
 from pydantic import (
@@ -17,12 +17,12 @@ from pydantic import (
 
 from wintertoo.data import (
     MAX_TARGNAME_LEN,
+    SPRING_SCIENCE_FILTERS,
     SUMMER_FILTERS,
     WINTER_SCIENCE_FILTERS,
-    SPRING_SCIENCE_FILTERS,
+    SpringFilters,
     SummerFilters,
     WinterFilters,
-    SpringFilters,
     get_default_value,
 )
 from wintertoo.errors import WinterValidationError

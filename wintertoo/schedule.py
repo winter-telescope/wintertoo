@@ -14,12 +14,12 @@ from wintertoo.models import Program
 from wintertoo.models.too import (
     AllTooClasses,
     FullTooRequest,
+    Spring,
+    SpringRaDecToO,
     SummerFieldToO,
     SummerRaDecToO,
     WinterFieldToO,
     WinterRaDecToO,
-    SpringRaDecToO,
-    Spring,
     is_summer,
 )
 from wintertoo.validate import validate_schedule_df
