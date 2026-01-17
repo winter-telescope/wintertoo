@@ -16,4 +16,5 @@ from wintertoo.models.too import (
     SummerRaDecToO,
     WinterFieldToO,
     WinterRaDecToO,
+    SpringRaDecToO
 )

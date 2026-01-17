@@ -22,15 +22,18 @@ winter_fields = all_winter_fields[all_winter_fields["ID"] < 41170]
 winter_secondary_fields = all_winter_fields[all_winter_fields["ID"] >= 41170]
 
 SummerFilters = Literal["u", "g", "r", "i"]
-
 WinterFilters = Literal["dark", "Y", "J", "Hs"]
+SpringFilters = Literal["dark", "Y", "J", "Hs"]
 
 SUMMER_FILTERS = list(typing.get_args(SummerFilters))
 WINTER_FILTERS = list(typing.get_args(WinterFilters))
 WINTER_SCIENCE_FILTERS = ["Y", "J", "Hs"]
+SPRING_FILTERS = list(typing.get_args(SpringFilters))
+SPRING_SCIENCE_FILTERS = ["Y", "J", "Hs"]
 
 SUMMER_BASE_WIDTH = 0.26112
 WINTER_BASE_WIDTH = 1.0
+SPRING_BASE_WIDTH = 1.0
 
 MAX_TARGNAME_LEN = 30
 

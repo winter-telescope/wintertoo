@@ -3,7 +3,7 @@ Models for ToO requests
 """
 
 import logging
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Literal
 
 from astropy.time import Time
 from pydantic import (
@@ -19,8 +19,10 @@ from wintertoo.data import (
     MAX_TARGNAME_LEN,
     SUMMER_FILTERS,
     WINTER_SCIENCE_FILTERS,
+    SPRING_SCIENCE_FILTERS,
     SummerFilters,
     WinterFilters,
+    SpringFilters,
     get_default_value,
 )
 from wintertoo.errors import WinterValidationError
@@ -85,6 +87,11 @@ class ToORequest(BaseModel):
     use_best_detector: bool = Field(
         default=get_default_value("bestDetector"),
         title="Place ra/dec at the center of the best detector",
+    )
+
+    camera: Literal["summer", "winter", "spring"] = Field(
+        title="Camera to use",
+        description="Camera to use (summer, winter, spring)",
     )
 
     @computed_field
@@ -224,15 +231,18 @@ class FullTooRequest(ToORequest, ObsWithRaDec, ObsWithField):
 
 class Summer(ToORequest):
     """Summer ToO Request"""
-
     filters: List[SummerFilters] = Field(default=SUMMER_FILTERS)
-
+    camera: Literal["summer"] = "summer"
 
 class Winter(ToORequest):
     """Winter ToO Request"""
-
     filters: list[WinterFilters] = WINTER_SCIENCE_FILTERS
+    camera: Literal["winter"] = "winter"
 
+class Spring(ToORequest):
+    """Spring ToO Request"""
+    filters: list[SpringFilters] = SPRING_SCIENCE_FILTERS
+    camera: Literal["spring"] = "spring"
 
 class SummerFieldToO(Summer, FieldToO):
     """Summer ToO Request with field"""
@@ -249,11 +259,14 @@ class WinterFieldToO(Winter, FieldToO):
 class WinterRaDecToO(Winter, RaDecToO):
     """Winter ToO Request with Ra/Dec"""
 
+class SpringRaDecToO(Spring, RaDecToO):
+    """Spring ToO Request with Ra/Dec"""
 
-AllTooClasses = Union[SummerFieldToO, SummerRaDecToO, WinterFieldToO, WinterRaDecToO]
+
+AllTooClasses = Union[WinterFieldToO, WinterRaDecToO, SpringRaDecToO]
 
 
-def is_summer(too: Union[Winter, Summer]) -> bool:
+def is_summer(too: Union[Winter, Spring]) -> bool:
     """
     Checks a ToO Request to ensure it is either a Summer or Winter request
 
