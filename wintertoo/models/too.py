@@ -231,18 +231,24 @@ class FullTooRequest(ToORequest, ObsWithRaDec, ObsWithField):
 
 class Summer(ToORequest):
     """Summer ToO Request"""
+
     filters: List[SummerFilters] = Field(default=SUMMER_FILTERS)
     camera: Literal["summer"] = "summer"
 
+
 class Winter(ToORequest):
     """Winter ToO Request"""
+
     filters: list[WinterFilters] = WINTER_SCIENCE_FILTERS
     camera: Literal["winter"] = "winter"
 
+
 class Spring(ToORequest):
     """Spring ToO Request"""
+
     filters: list[SpringFilters] = SPRING_SCIENCE_FILTERS
     camera: Literal["spring"] = "spring"
+
 
 class SummerFieldToO(Summer, FieldToO):
     """Summer ToO Request with field"""
@@ -258,6 +264,7 @@ class WinterFieldToO(Winter, FieldToO):
 
 class WinterRaDecToO(Winter, RaDecToO):
     """Winter ToO Request with Ra/Dec"""
+
 
 class SpringRaDecToO(Spring, RaDecToO):
     """Spring ToO Request with Ra/Dec"""

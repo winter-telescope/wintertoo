@@ -65,7 +65,7 @@ def make_schedule(
                     "ditherNumber": too.n_dither,
                     "ditherStepSize": too.dither_distance,
                     "bestDetector": too.use_best_detector,
-                    "camera": too.camera
+                    "camera": too.camera,
                 }
                 all_entries.append(new)
 
