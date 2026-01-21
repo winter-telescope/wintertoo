@@ -3,7 +3,7 @@ Models for ToO requests
 """
 
 import logging
-from typing import List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union, ClassVar
 
 from astropy.time import Time
 from pydantic import (
@@ -37,6 +37,9 @@ class ToORequest(BaseModel):
     """
     Base model for ToO requests
     """
+    DEFAULT_N_DITHER: ClassVar[float] = get_default_value("ditherNumber")
+    DEFAULT_EXPOSURE_TIME: ClassVar[float] = get_default_value("visitExpTime")
+    DEFAULT_DITHER_STEP_SIZE: ClassVar[float] = get_default_value("ditherStepSize")
 
     filters: list[str] = Field(min_length=1)
     target_priority: float = Field(
@@ -93,6 +96,17 @@ class ToORequest(BaseModel):
         title="Camera to use",
         description="Camera to use (summer, winter, spring)",
     )
+
+    @model_validator(mode="before")
+    def _inject_class_defaults(cls, values):
+        # if caller didn't provide n_dither, use class-level default
+        if "n_dither" not in values or values.get("n_dither") is None:
+            values["n_dither"] = getattr(cls, "DEFAULT_N_DITHER", get_default_value("ditherNumber"))
+        if "dither_distance" not in values or values.get("dither_distance") is None:
+            values["dither_distance"] = getattr(cls, "DEFAULT_DITHER_STEP_SIZE", get_default_value("ditherStepSize"))
+        if "total_exposure_time" not in values or values.get("total_exposure_time") is None:
+            values["total_exposure_time"] = getattr(cls, "DEFAULT_EXPOSURE_TIME", get_default_value("visitExpTime"))
+        return values
 
     @computed_field
     @property
@@ -248,6 +262,10 @@ class Spring(ToORequest):
 
     filters: list[SpringFilters] = SPRING_SCIENCE_FILTERS
     camera: Literal["spring"] = "spring"
+
+    DEFAULT_EXPOSURE_TIME = 900.0
+    DEFAULT_N_DITHER = 30
+    DEFAULT_DITHER_STEP_SIZE = 60.0
 
 
 class SummerFieldToO(Summer, FieldToO):
