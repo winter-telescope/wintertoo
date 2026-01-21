@@ -133,7 +133,7 @@ def schedule_ra_dec(
 
     full_request = FullTooRequest(
         field_id=field_id,
-        **too.model_dump(exclude=set(too.model_computed_fields.keys())),
+        **too.model_dump(exclude=set(too.__class__.model_computed_fields.keys())),
     )
 
     schedule = make_schedule(
@@ -168,7 +168,7 @@ def schedule_field(
     full_request = FullTooRequest(
         ra_deg=ra_deg,
         dec_deg=dec_deg,
-        **too.model_dump(exclude=set(too.model_computed_fields.keys())),
+        **too.model_dump(exclude=set(too.__class__.model_computed_fields.keys())),
     )
 
     schedule = make_schedule(
