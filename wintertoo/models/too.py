@@ -38,7 +38,7 @@ class ToORequest(BaseModel):
     Base model for ToO requests
     """
 
-    DEFAULT_N_DITHER: ClassVar[float] = get_default_value("ditherNumber")
+    DEFAULT_N_DITHER: ClassVar[int] = get_default_value("ditherNumber")
     DEFAULT_EXPOSURE_TIME: ClassVar[float] = get_default_value("visitExpTime")
     DEFAULT_DITHER_STEP_SIZE: ClassVar[float] = get_default_value("ditherStepSize")
 
@@ -55,14 +55,11 @@ class ToORequest(BaseModel):
         examples=["SN2021abc", "ZTF19aapreis"],
     )
     total_exposure_time: float = Field(
-        default=get_default_value("visitExpTime"),
         title="Combined Exposure Time across dithers (s)",
         ge=1.0,
         validation_alias=AliasChoices("total_exposure_time", "t_exp"),
     )
-    n_dither: int = Field(
-        default=get_default_value("ditherNumber"), ge=1, title="Number of dithers"
-    )
+    n_dither: int = Field(ge=1, title="Number of dithers")
     n_repetitions: int = Field(
         default=1,
         ge=1,
@@ -70,7 +67,6 @@ class ToORequest(BaseModel):
         validation_alias=AliasChoices("n_repetitions", "n_exp"),
     )
     dither_distance: float = Field(
-        default=get_default_value("ditherStepSize"),
         ge=0.0,
         title="dither distance (arcsec)",
     )
@@ -100,8 +96,8 @@ class ToORequest(BaseModel):
         description="Camera to use (summer, winter, spring)",
     )
 
-    @classmethod
     @model_validator(mode="before")
+    @classmethod
     def _inject_class_defaults(cls, values):
         # if caller didn't provide n_dither, use class-level default
         if "n_dither" not in values or values.get("n_dither") is None:
