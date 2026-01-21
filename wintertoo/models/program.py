@@ -27,13 +27,13 @@ class Program(ProgramCredentials):
 
     puid: Optional[int] = Field(default=None)
     progid: int = Field(default=1)
-    pi_name: str = Field(min_length=1, example="Hubble", default=None)
-    pi_email: str = Field(min_length=1, example="someone@institute.com", default=None)
+    pi_name: str = Field(min_length=1, example="Hubble")
+    pi_email: str = Field(min_length=1, example="someone@institute.com")
     startdate: date = Field()
     enddate: date = Field()
     hours_allocated: float = Field(ge=0.0, default=0.0)
     hours_used: float = Field(ge=0.0, default=0.0)
-    maxpriority: float = Field(description="Max priority")
+    maxpriority: float = Field(description="Max priority", ge=0.0, default=100.0)
     progtitle: str = Field(min_length=1, example="A program title", default=None)
 
     @model_validator(mode="after")

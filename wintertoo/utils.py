@@ -4,6 +4,7 @@
 Created on Tue Jan 25 13:51:59 2022
 @author: frostig, belatedly edited by Robert Stein, further belatedly edited by Sam Rose
 """
+
 import logging
 
 import astropy.time

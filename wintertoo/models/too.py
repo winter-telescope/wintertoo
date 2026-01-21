@@ -3,7 +3,7 @@ Models for ToO requests
 """
 
 import logging
-from typing import List, Optional, Union
+from typing import ClassVar, List, Literal, Optional, Union
 
 from astropy.time import Time
 from pydantic import (
@@ -17,8 +17,10 @@ from pydantic import (
 
 from wintertoo.data import (
     MAX_TARGNAME_LEN,
+    SPRING_SCIENCE_FILTERS,
     SUMMER_FILTERS,
     WINTER_SCIENCE_FILTERS,
+    SpringFilters,
     SummerFilters,
     WinterFilters,
     get_default_value,
@@ -35,6 +37,10 @@ class ToORequest(BaseModel):
     """
     Base model for ToO requests
     """
+
+    DEFAULT_N_DITHER: ClassVar[float] = get_default_value("ditherNumber")
+    DEFAULT_EXPOSURE_TIME: ClassVar[float] = get_default_value("visitExpTime")
+    DEFAULT_DITHER_STEP_SIZE: ClassVar[float] = get_default_value("ditherStepSize")
 
     filters: list[str] = Field(min_length=1)
     target_priority: float = Field(
@@ -64,7 +70,9 @@ class ToORequest(BaseModel):
         validation_alias=AliasChoices("n_repetitions", "n_exp"),
     )
     dither_distance: float = Field(
-        get_default_value("ditherStepSize"), ge=0.0, title="dither distance (arcsec)"
+        default=get_default_value("ditherStepSize"),
+        ge=0.0,
+        title="dither distance (arcsec)",
     )
     start_time_mjd: Optional[float] = Field(
         default=None,
@@ -86,6 +94,32 @@ class ToORequest(BaseModel):
         default=get_default_value("bestDetector"),
         title="Place ra/dec at the center of the best detector",
     )
+
+    camera: Literal["summer", "winter", "spring"] = Field(
+        title="Camera to use",
+        description="Camera to use (summer, winter, spring)",
+    )
+
+    @classmethod
+    @model_validator(mode="before")
+    def _inject_class_defaults(cls, values):
+        # if caller didn't provide n_dither, use class-level default
+        if "n_dither" not in values or values.get("n_dither") is None:
+            values["n_dither"] = getattr(
+                cls, "DEFAULT_N_DITHER", get_default_value("ditherNumber")
+            )
+        if "dither_distance" not in values or values.get("dither_distance") is None:
+            values["dither_distance"] = getattr(
+                cls, "DEFAULT_DITHER_STEP_SIZE", get_default_value("ditherStepSize")
+            )
+        if (
+            "total_exposure_time" not in values
+            or values.get("total_exposure_time") is None
+        ):
+            values["total_exposure_time"] = getattr(
+                cls, "DEFAULT_EXPOSURE_TIME", get_default_value("visitExpTime")
+            )
+        return values
 
     @computed_field
     @property
@@ -226,12 +260,25 @@ class Summer(ToORequest):
     """Summer ToO Request"""
 
     filters: List[SummerFilters] = Field(default=SUMMER_FILTERS)
+    camera: Literal["summer"] = "summer"
 
 
 class Winter(ToORequest):
     """Winter ToO Request"""
 
     filters: list[WinterFilters] = WINTER_SCIENCE_FILTERS
+    camera: Literal["winter"] = "winter"
+
+
+class Spring(ToORequest):
+    """Spring ToO Request"""
+
+    filters: list[SpringFilters] = SPRING_SCIENCE_FILTERS
+    camera: Literal["spring"] = "spring"
+
+    DEFAULT_EXPOSURE_TIME = 900.0
+    DEFAULT_N_DITHER = 30
+    DEFAULT_DITHER_STEP_SIZE = 60.0
 
 
 class SummerFieldToO(Summer, FieldToO):
@@ -250,10 +297,14 @@ class WinterRaDecToO(Winter, RaDecToO):
     """Winter ToO Request with Ra/Dec"""
 
 
-AllTooClasses = Union[SummerFieldToO, SummerRaDecToO, WinterFieldToO, WinterRaDecToO]
+class SpringRaDecToO(Spring, RaDecToO):
+    """Spring ToO Request with Ra/Dec"""
 
 
-def is_summer(too: Union[Winter, Summer]) -> bool:
+AllTooClasses = Union[WinterFieldToO, WinterRaDecToO, SpringRaDecToO]
+
+
+def is_summer(too: Union[Winter, Spring]) -> bool:
     """
     Checks a ToO Request to ensure it is either a Summer or Winter request
 

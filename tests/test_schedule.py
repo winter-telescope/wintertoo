@@ -9,7 +9,13 @@ from datetime import date
 
 import pandas as pd
 
-from wintertoo.models import Program, SummerFieldToO, SummerRaDecToO
+from wintertoo.models import (
+    Program,
+    SpringRaDecToO,
+    SummerFieldToO,
+    SummerRaDecToO,
+    WinterRaDecToO,
+)
 from wintertoo.schedule import concat_toos, schedule_field, schedule_ra_dec
 from wintertoo.submit import export_schedule_to_sqlitedb
 from wintertoo.validate import (
@@ -28,6 +34,7 @@ program = Program(
     pi_name="Stein",
     progname="2021A000",
     prog_key="763244309190298696786072636901190268976229595667748695826878",
+    pi_email="fake@nowhere.com",
     maxpriority=100,
     startdate=date(2021, 1, 1),
     enddate=date(3023, 12, 31),
@@ -57,14 +64,16 @@ class TestSchedule(unittest.TestCase):
         """
         logger.info("Testing schedule generation")
 
+        kwargs = {
+            "ra_deg": 173.7056754,
+            "dec_deg": 11.253441,
+            "start_time_mjd": 62721.1894969287,
+            "end_time_mjd": 62722.1894969452,
+            "target_name": "test_radec",
+        }
+
         schedule = schedule_ra_dec(
-            too=SummerRaDecToO(
-                ra_deg=173.7056754,
-                dec_deg=11.253441,
-                start_time_mjd=62721.1894969287,
-                end_time_mjd=62722.1894969452,
-                target_name="test_radec",
-            ),
+            too=SummerRaDecToO(**kwargs),
             program=program,
         )
 
@@ -93,6 +102,13 @@ class TestSchedule(unittest.TestCase):
 
         output_path = export_schedule_to_sqlitedb(schedule, test_data_dir)
         output_path.unlink()
+
+        for too_class in [WinterRaDecToO, SpringRaDecToO]:
+            schedule = schedule_ra_dec(
+                too=too_class(**kwargs),
+                program=program,
+            )
+            validate_schedule_with_program(schedule, program)
 
     def test_schedule_utils(self):
         """

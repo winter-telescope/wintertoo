@@ -14,6 +14,8 @@ from wintertoo.models import Program
 from wintertoo.models.too import (
     AllTooClasses,
     FullTooRequest,
+    Spring,
+    SpringRaDecToO,
     SummerFieldToO,
     SummerRaDecToO,
     WinterFieldToO,
@@ -63,6 +65,7 @@ def make_schedule(
                     "ditherNumber": too.n_dither,
                     "ditherStepSize": too.dither_distance,
                     "bestDetector": too.use_best_detector,
+                    "camera": too.camera,
                 }
                 all_entries.append(new)
 
@@ -102,7 +105,7 @@ def build_schedule_list(
 
 
 def schedule_ra_dec(
-    too: Union[SummerRaDecToO, WinterRaDecToO],
+    too: Union[SummerRaDecToO, WinterRaDecToO, SpringRaDecToO],
     program: Program,
     csv_save_file: str = None,
 ) -> pd.DataFrame:
@@ -114,6 +117,12 @@ def schedule_ra_dec(
     :param csv_save_file: optional csv save path
     :return: a schedule dataframe
     """
+
+    is_spring = isinstance(too, Spring)
+
+    if is_spring & too.use_field_grid:
+        raise ValueError("Spring ToO requests cannot use the field grid option.")
+
     if too.use_field_grid:
         best_field = get_best_field(too.ra_deg, too.dec_deg, summer=is_summer(too))
         too.ra_deg = best_field["RA"]
@@ -124,7 +133,7 @@ def schedule_ra_dec(
 
     full_request = FullTooRequest(
         field_id=field_id,
-        **too.model_dump(exclude=set(too.model_computed_fields.keys())),
+        **too.model_dump(exclude=set(too.__class__.model_computed_fields.keys())),
     )
 
     schedule = make_schedule(
@@ -159,7 +168,7 @@ def schedule_field(
     full_request = FullTooRequest(
         ra_deg=ra_deg,
         dec_deg=dec_deg,
-        **too.model_dump(exclude=set(too.model_computed_fields.keys())),
+        **too.model_dump(exclude=set(too.__class__.model_computed_fields.keys())),
     )
 
     schedule = make_schedule(
@@ -190,7 +199,7 @@ def concat_toos(
                 too=too,
                 program=program,
             )
-        elif isinstance(too, (SummerRaDecToO, WinterRaDecToO)):
+        elif isinstance(too, (SummerRaDecToO, WinterRaDecToO, SpringRaDecToO)):
             res = schedule_ra_dec(
                 too=too,
                 program=program,
