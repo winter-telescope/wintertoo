@@ -70,7 +70,9 @@ class ToORequest(BaseModel):
         validation_alias=AliasChoices("n_repetitions", "n_exp"),
     )
     dither_distance: float = Field(
-        get_default_value("ditherStepSize"), ge=0.0, title="dither distance (arcsec)"
+        default=get_default_value("ditherStepSize"),
+        ge=0.0,
+        title="dither distance (arcsec)",
     )
     start_time_mjd: Optional[float] = Field(
         default=None,

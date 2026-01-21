@@ -30,7 +30,7 @@ classifiers = [
     'Operating System :: MacOS',
 ]
 dependencies = [
-    "pandas",
+    "pandas<3.0.0",
     "astropy>=6.0.0",
     "astroplan>=0.10",
     "matplotlib",
