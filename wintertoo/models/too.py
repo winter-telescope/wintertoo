@@ -3,7 +3,7 @@ Models for ToO requests
 """
 
 import logging
-from typing import List, Literal, Optional, Union, ClassVar
+from typing import ClassVar, List, Literal, Optional, Union
 
 from astropy.time import Time
 from pydantic import (
@@ -37,6 +37,7 @@ class ToORequest(BaseModel):
     """
     Base model for ToO requests
     """
+
     DEFAULT_N_DITHER: ClassVar[float] = get_default_value("ditherNumber")
     DEFAULT_EXPOSURE_TIME: ClassVar[float] = get_default_value("visitExpTime")
     DEFAULT_DITHER_STEP_SIZE: ClassVar[float] = get_default_value("ditherStepSize")
@@ -97,15 +98,25 @@ class ToORequest(BaseModel):
         description="Camera to use (summer, winter, spring)",
     )
 
+    @classmethod
     @model_validator(mode="before")
     def _inject_class_defaults(cls, values):
         # if caller didn't provide n_dither, use class-level default
         if "n_dither" not in values or values.get("n_dither") is None:
-            values["n_dither"] = getattr(cls, "DEFAULT_N_DITHER", get_default_value("ditherNumber"))
+            values["n_dither"] = getattr(
+                cls, "DEFAULT_N_DITHER", get_default_value("ditherNumber")
+            )
         if "dither_distance" not in values or values.get("dither_distance") is None:
-            values["dither_distance"] = getattr(cls, "DEFAULT_DITHER_STEP_SIZE", get_default_value("ditherStepSize"))
-        if "total_exposure_time" not in values or values.get("total_exposure_time") is None:
-            values["total_exposure_time"] = getattr(cls, "DEFAULT_EXPOSURE_TIME", get_default_value("visitExpTime"))
+            values["dither_distance"] = getattr(
+                cls, "DEFAULT_DITHER_STEP_SIZE", get_default_value("ditherStepSize")
+            )
+        if (
+            "total_exposure_time" not in values
+            or values.get("total_exposure_time") is None
+        ):
+            values["total_exposure_time"] = getattr(
+                cls, "DEFAULT_EXPOSURE_TIME", get_default_value("visitExpTime")
+            )
         return values
 
     @computed_field
