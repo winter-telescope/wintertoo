@@ -38,7 +38,7 @@ dependencies = [
     "pytz",
     "jsonschema",
     "sqlalchemy",
-    "pydantic>=2.2.0",
+    "pydantic>=2.12.5",
     "pre-commit",
     "bcrypt",
     "psycopg",
