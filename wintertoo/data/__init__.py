@@ -41,8 +41,6 @@ MAX_TARGNAME_LEN = 30
 WinterImageTypes = Literal["exposure", "raw", "science", "stack", "diff", "avro"]
 DEFAULT_IMAGE_TYPE = "stack"
 
-PROGRAM_DB_HOST = "jagati.caltech.edu"
-
 too_schedule_config_path = data_dir.joinpath("observing_request_schema.json")
 
 with open(too_schedule_config_path, "rb") as f:

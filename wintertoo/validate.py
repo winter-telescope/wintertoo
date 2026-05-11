@@ -4,6 +4,7 @@ Module for validating ToO requests
 
 import json
 import logging
+from typing import Unpack
 
 import astropy.time
 import pandas as pd
@@ -11,10 +12,10 @@ from astropy import units as u
 from astropy.time import Time
 from jsonschema import validate
 
-from wintertoo.data import PROGRAM_DB_HOST, SUMMER_FILTERS, too_db_schedule_config
+from wintertoo.data import SUMMER_FILTERS, too_db_schedule_config
 from wintertoo.database import get_program_details
 from wintertoo.errors import WinterCredentialsError, WinterValidationError
-from wintertoo.models import Program
+from wintertoo.models import DatabaseConfig, Program
 from wintertoo.utils import up_tonight
 
 logger = logging.getLogger(__name__)
@@ -23,28 +24,16 @@ logger = logging.getLogger(__name__)
 def get_and_validate_program_details(  # pylint: disable=R0913,R0917
     program_name: str,
     program_api_key: str,
-    program_db_user: str = None,
-    program_db_password: str = None,
-    program_db_host: str = PROGRAM_DB_HOST,
-    program_db_name: str = "summer",
+    **kwargs: Unpack[DatabaseConfig],
 ) -> Program:
     """
     Get details of chosen program
     :param program_name: Name of program (e.g. 2020A001)
     :param program_api_key: program api key
-    :param program_db_user: user of program database
-    :param program_db_password: password of program database
-    :param program_db_host: host of program database
-    :param program_db_name: name of database containing program table
     :return: dataframe of program
     """
     data = get_program_details(
-        program_name=program_name,
-        program_api_key=program_api_key,
-        program_db_user=program_db_user,
-        program_db_password=program_db_password,
-        program_db_host=program_db_host,
-        program_db_name=program_db_name,
+        program_name=program_name, program_api_key=program_api_key, **kwargs
     )
 
     if len(data) == 0:
@@ -301,10 +290,7 @@ def validate_schedule_request(  # pylint: disable=R0913,R0917
     schedule_request: pd.DataFrame,
     program_name: str,
     program_api_key: str,
-    program_db_name: str,
-    program_db_user: str = None,
-    program_db_password: str = None,
-    program_db_host: str = PROGRAM_DB_HOST,
+    **kwargs: Unpack[DatabaseConfig],
 ):
     """
     Central to validate that a schedule request is allowed.
@@ -313,10 +299,6 @@ def validate_schedule_request(  # pylint: disable=R0913,R0917
     :param schedule_request: Schedule to validate
     :param program_name: name of program e.g 2020A000
     :param program_api_key: unique API key for program
-    :param program_db_name: name of the programs database
-    :param program_db_user:  user for the programs database
-    :param program_db_password: password for the programs database
-    :param program_db_host: host of the programs database
     :return: None
     """
 
@@ -324,10 +306,7 @@ def validate_schedule_request(  # pylint: disable=R0913,R0917
     program = get_and_validate_program_details(
         program_name=program_name,
         program_api_key=program_api_key,
-        program_db_name=program_db_name,
-        program_db_user=program_db_user,
-        program_db_password=program_db_password,
-        program_db_host=program_db_host,
+        **kwargs,
     )
 
     validate_schedule_with_program(schedule_request, program)
