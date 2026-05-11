@@ -38,6 +38,29 @@ SPRING_BASE_WIDTH = 1.0
 
 MAX_TARGNAME_LEN = 30
 
+WINTER_OVERHEAD = 1.125
+SPRING_OVERHEAD = 1.400
+
+
+def get_overhead(
+    camera: Literal["summer", "winter", "spring"],
+) -> float:
+    """
+    Get overhead for a given camera.
+
+    :param camera: Camera to get overhead for
+    :return: overhead in hours
+    """
+    if camera == "summer":
+        return 1.0
+    if camera == "winter":
+        return WINTER_OVERHEAD
+    if camera == "spring":
+        return SPRING_OVERHEAD
+
+    raise ValueError(f"Unknown camera {camera}")
+
+
 WinterImageTypes = Literal["exposure", "raw", "science", "stack", "diff", "avro"]
 DEFAULT_IMAGE_TYPE = "stack"
 

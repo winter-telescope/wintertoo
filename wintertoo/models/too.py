@@ -17,8 +17,10 @@ from pydantic import (
 
 from wintertoo.data import (
     MAX_TARGNAME_LEN,
+    SPRING_OVERHEAD,
     SPRING_SCIENCE_FILTERS,
     SUMMER_FILTERS,
+    WINTER_OVERHEAD,
     WINTER_SCIENCE_FILTERS,
     SpringFilters,
     SummerFilters,
@@ -41,6 +43,7 @@ class ToORequest(BaseModel):
     DEFAULT_N_DITHER: ClassVar[int] = get_default_value("ditherNumber")
     DEFAULT_EXPOSURE_TIME: ClassVar[float] = get_default_value("visitExpTime")
     DEFAULT_DITHER_STEP_SIZE: ClassVar[float] = get_default_value("ditherStepSize")
+    OVERHEAD: ClassVar[float] = 1.0
 
     filters: list[str] = Field(min_length=1)
     target_priority: float = Field(
@@ -127,6 +130,17 @@ class ToORequest(BaseModel):
         :return: Exposure time per dither
         """
         return self.total_exposure_time / self.n_dither
+
+    @computed_field
+    @property
+    def total_exposure_with_overhead(self) -> float:
+        """
+        Computed field to get the total time required for the observation,
+        including overheads
+
+        :return: Total time required for the observation (s)
+        """
+        return self.total_exposure_time * self.OVERHEAD
 
     @model_validator(mode="after")
     def validate_date_order(self):
@@ -264,6 +278,7 @@ class Winter(ToORequest):
 
     filters: list[WinterFilters] = WINTER_SCIENCE_FILTERS
     camera: Literal["winter"] = "winter"
+    OVERHEAD = WINTER_OVERHEAD
 
 
 class Spring(ToORequest):
@@ -275,6 +290,7 @@ class Spring(ToORequest):
     DEFAULT_EXPOSURE_TIME = 900.0
     DEFAULT_N_DITHER = 30
     DEFAULT_DITHER_STEP_SIZE = 60.0
+    OVERHEAD = SPRING_OVERHEAD
 
 
 class SummerFieldToO(Summer, FieldToO):

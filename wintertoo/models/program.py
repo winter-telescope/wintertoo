@@ -48,17 +48,4 @@ class Program(ProgramCredentials):
         assert enddate > startdate
         return self
 
-    @model_validator(mode="after")
-    def validate_time_allocation(self):
-        """
-        Ensure that time remaining has a sensible value
-
-        :return: self
-        """
-        total_time = self.hours_allocated
-        hours_used = self.hours_used
-        assert hours_used <= total_time
-        assert hours_used >= 0.0
-        return self
-
     model_config = ConfigDict(extra="forbid")

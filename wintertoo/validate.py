@@ -12,7 +12,7 @@ from astropy import units as u
 from astropy.time import Time
 from jsonschema import validate
 
-from wintertoo.data import SUMMER_FILTERS, too_db_schedule_config
+from wintertoo.data import SUMMER_FILTERS, get_overhead, too_db_schedule_config
 from wintertoo.database import get_program_details
 from wintertoo.errors import WinterCredentialsError, WinterValidationError
 from wintertoo.models import DatabaseConfig, Program
@@ -232,14 +232,16 @@ def validate_time_allocation(
     :return: None
     """
 
-    new_hours_used = schedule["visitExpTime"].sum() / 3600
+    overhead = get_overhead(schedule["camera"].iloc[0])
+    new_hours_used = overhead * schedule["visitExpTime"].sum() / 3600.0
     total_hours_used = new_hours_used + hours_used
 
     if total_hours_used > hours_allocated:
         err = (
-            f"Sum ({total_hours_used}) of hours used ({hours_used}) "
-            f"and request duration ({new_hours_used}) "
-            f"exceeds hours allocated ({hours_allocated})."
+            f"Sum of time used ({hours_used:.1f}h) "
+            f"plus request duration ({new_hours_used:.1f}h "
+            f"including overhead of {100.*(overhead - 1.):.0f}%) "
+            f"exceeds total allocated program time ({hours_allocated:.1f}h)."
         )
         logger.error(err)
         raise WinterValidationError(err)
