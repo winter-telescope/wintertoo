@@ -32,7 +32,7 @@ classifiers = [
 dependencies = [
     "pandas<3.0.0",
     "astropy>=6.0.0",
-    "astroplan>=0.10",
+    "astroplan>=0.10.1",
     "matplotlib",
     "numpy",
     "pytz",
