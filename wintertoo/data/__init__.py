@@ -8,8 +8,9 @@ from pathlib import Path
 from typing import Literal
 
 import astroplan
-import astropy.coordinates as coords
 import pandas as pd
+from astropy import units as u
+from astropy.coordinates import EarthLocation
 
 data_dir = Path(__file__).parent.resolve()
 
@@ -58,7 +59,5 @@ def get_default_value(key: str):
     return too_db_schedule_config["properties"][key]["default"]
 
 
-# define location of Palomar Observatory
-PALOMAR_LOC = coords.EarthLocation.of_site("Palomar", refresh_cache=True)
-
+PALOMAR_LOC = EarthLocation.from_geodetic(-116.863 * u.deg, 33.356 * u.deg, 1706 * u.m)
 palomar_observer = astroplan.Observer(location=PALOMAR_LOC)
