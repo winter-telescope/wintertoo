@@ -31,7 +31,7 @@ classifiers = [
 ]
 dependencies = [
     "pandas<3.0.0",
-    "astropy>=6.0.0",
+    "astropy>=6.1.7",
     "astroplan>=0.10",
     "matplotlib",
     "numpy",
