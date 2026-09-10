@@ -38,7 +38,7 @@ program = Program(
     maxpriority=100,
     startdate=date(2021, 1, 1),
     enddate=date(3023, 12, 31),
-    hours_allocated=1.0,
+    hours_allocated=5.0,
 )
 
 

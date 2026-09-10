@@ -2,6 +2,7 @@
 Models for the wintertoo
 """
 
+from wintertoo.models.database import DatabaseConfig
 from wintertoo.models.image import (
     ConeImageQuery,
     ImagePath,

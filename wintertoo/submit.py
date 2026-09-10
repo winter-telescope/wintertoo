@@ -5,11 +5,12 @@ Module handling submission of ToO schedules
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Unpack
 
 import pandas as pd
 from sqlalchemy import create_engine
 
+from wintertoo.models import DatabaseConfig
 from wintertoo.validate import validate_schedule_df, validate_schedule_request
 
 logger = logging.getLogger(__name__)
@@ -70,12 +71,9 @@ def submit_schedule(  # pylint: disable=R0913,R0917
     schedule: pd.DataFrame,
     program_api_key: str,
     program_name: str,
-    program_db_name: str,
-    program_db_host: str,
-    program_db_user: str,
-    program_db_password: str,
     save_path: Optional[str] = None,
     submit_trigger: bool = True,
+    **kwargs: Unpack[DatabaseConfig],
 ) -> Optional[Path]:
     """
     Function to validate, and then optionally submit, a schedule
@@ -83,22 +81,13 @@ def submit_schedule(  # pylint: disable=R0913,R0917
     :param schedule: schedule to use
     :param program_api_key: API key of program
     :param program_name: Program name (e.g 2020A000)
-    :param program_db_name: Name of program DB
-    :param program_db_host: Host of programs DB
-    :param program_db_user: User of programs DB
-    :param program_db_password: password of programs DB
     :param save_path: save path
     :param submit_trigger: boolean for whether to actually submit a trigger
+    :param kwargs: Unpack[DatabaseConfig]
     :return: None
     """
     validate_schedule_request(
-        schedule,
-        program_api_key=program_api_key,
-        program_name=program_name,
-        program_db_name=program_db_name,
-        program_db_user=program_db_user,
-        program_db_password=program_db_password,
-        program_db_host=program_db_host,
+        schedule, program_api_key=program_api_key, program_name=program_name, **kwargs
     )
     if submit_trigger:
         if save_path is None:

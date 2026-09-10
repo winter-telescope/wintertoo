@@ -4,69 +4,44 @@ Module for database functions
 
 import getpass
 import secrets
+from typing import Unpack
 
 import bcrypt
 import numpy as np
 import pandas as pd
 import psycopg
-from sqlalchemy import create_engine
 
-from wintertoo.data import PROGRAM_DB_HOST
 from wintertoo.errors import WinterCredentialsError
-
-
-#
-def get_engine(
-    db_user: str = None,
-    db_password: str = None,
-    db_host: str = "localhost",
-    db_name: str = "summer",
-):
-    """
-    Get engine for database
-
-    :param db_user: Database user
-    :param db_password: Database password
-    :param db_host: Database host
-    :param db_name: Database name
-    :return: Engine
-    """
-    return create_engine(
-        f"postgresql+psycopg://{db_user}:{db_password}" f"@{db_host}/{db_name}",
-        future=True,
-    )
+from wintertoo.models import DatabaseConfig
 
 
 def get_program_details(  # pylint: disable=R0913,R0914,R0917
-    program_name: str,
-    program_api_key: str,
-    program_db_user: str = None,
-    program_db_password: str = None,
-    program_db_host: str = PROGRAM_DB_HOST,
-    program_db_name: str = "summer",
+    program_name: str, program_api_key: str, **kwargs: Unpack[DatabaseConfig]
 ) -> pd.DataFrame:
     """
     Get details of chosen program
     :param program_name: Name of program (e.g. 2020A001)
     :param program_api_key: program api key
-    :param program_db_user: user of program database
-    :param program_db_password: password of program database
-    :param program_db_host: host of program database
-    :param program_db_name: name of database containing program table
+    :param kwargs: database connection parameters
     :return: dataframe of program
     """
 
-    if program_db_user is None:
-        program_db_user = input("Enter program_db_user: ")
+    db_config = DatabaseConfig(**kwargs)
 
-    if program_db_password is None:
-        program_db_password = getpass.getpass(
-            f"Enter password for program_db_user {program_db_user}: "
+    if db_config.db_user is None:
+        db_config.db_user = input("Enter program_db_user: ")
+
+    if db_config.db_password is None:
+        db_config.db_password = getpass.getpass(
+            f"Enter password for db_user {db_config.db_user}: "
         )
 
     with psycopg.connect(  # pylint: disable=not-context-manager
-        f"dbname='{program_db_name}' user={program_db_user} "
-        f"password={program_db_password} host={program_db_host}",
+        dbname=db_config.db_name,
+        user=db_config.db_user,
+        password=db_config.db_password,
+        host=db_config.db_host,
+        port=db_config.db_port,
     ) as conn:
         conn.read_only = True
         with conn.execute("SELECT * FROM programs") as cursor:
