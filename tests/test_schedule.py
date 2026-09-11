@@ -6,6 +6,7 @@ import logging
 import os
 import unittest
 from datetime import date
+from io import StringIO
 
 import pandas as pd
 
@@ -82,7 +83,7 @@ class TestSchedule(unittest.TestCase):
 
         validate_target_visibility(schedule)
 
-        comp = pd.read_json(schedule.to_json())  # pylint: disable=no-member
+        comp = pd.read_json(StringIO(schedule.to_json()))  # pylint: disable=no-member
         self.assertEqual(test_df.to_json(), comp.to_json())  # pylint: disable=no-member
 
         schedule = schedule_ra_dec(
